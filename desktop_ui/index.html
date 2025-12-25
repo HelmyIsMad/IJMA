@@ -349,7 +349,7 @@
       }
     }
 
-    function updateHiddenInput(contentEditableElement) {
+    async function updateHiddenInput(contentEditableElement) {
       const targetId = contentEditableElement.getAttribute('data-target');
       const hiddenInput = document.getElementById(targetId);
       if (!hiddenInput) return;
@@ -368,21 +368,22 @@
         }
       }
 
-      normalizeImages(contentEditableElement).then(() => {
-        content = contentEditableElement.innerHTML;
-        content = content.replace(/<div><br><\/div>/g, '\n');
-        content = content.replace(/<div>/g, '\n');
-        content = content.replace(/<\/div>/g, '');
-        content = content.replace(/<br>/g, '\n');
+      await normalizeImages(contentEditableElement);
+      content = contentEditableElement.innerHTML;
+      content = content.replace(/<div><br><\/div>/g, '\n');
+      content = content.replace(/<div>/g, '\n');
+      content = content.replace(/<\/div>/g, '');
+      content = content.replace(/<br>/g, '\n');
 
-        if (content.toLowerCase().includes('<img') || content.toLowerCase().includes('<table')) {
-          hiddenInput.value = content;
-        } else {
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = content;
-          hiddenInput.value = tempDiv.textContent || tempDiv.innerText || '';
-        }
-      });
+      if (content.toLowerCase().includes('<img') || content.toLowerCase().includes('<table')) {
+        hiddenInput.value = content;
+      } else {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+        hiddenInput.value = tempDiv.textContent || tempDiv.innerText || '';
+      }
+
+      return;
     }
 
     async function normalizeImages(container) {
@@ -524,10 +525,10 @@
 
     setInterval(saveFormData, 2000);
 
-    function collectPayload() {
-      // Ensure hidden inputs are up-to-date
+    async function collectPayload() {
+      // Ensure hidden inputs are up-to-date (including async image inlining)
       const contentAreas = Array.from(document.querySelectorAll('[contenteditable="true"]'));
-      contentAreas.forEach((el) => updateHiddenInput(el));
+      await Promise.all(contentAreas.map((el) => updateHiddenInput(el)));
 
       const payload = {
         title: (document.getElementById('research_title')?.value || '').trim(),
@@ -588,7 +589,7 @@
       btn.disabled = true;
 
       try {
-        const payload = collectPayload();
+        const payload = await collectPayload();
         if (!payload.title) {
           setStatus('error', 'Research Title is required.');
           return;

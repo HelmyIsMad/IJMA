@@ -54,7 +54,7 @@ def _normalize_symbol_spacing_preserve_newlines(text: str) -> str:
 
 
 def process_table_content(paragraph: Paragraph, html_content: str, doc: Optional[Document] = None, 
-                          table_num: int = 1, caption: str = "") -> None:
+                          table_num: int = 1, caption: str = "") -> Optional[Paragraph]:
     """
     Process HTML table content and create actual Word table.
     
@@ -78,7 +78,7 @@ def process_table_content(paragraph: Paragraph, html_content: str, doc: Optional
             if not rows:
                 # Fallback to text
                 _fallback_to_text(paragraph, html_content)
-                return
+                return None
 
             # Build 2D array from HTML table, handling rowspan and colspan
             table_data, _ = _parse_html_table_to_grid(rows)
@@ -86,8 +86,7 @@ def process_table_content(paragraph: Paragraph, html_content: str, doc: Optional
             # Create actual Word table with merges
             if table_data:
                 # Create Word table with HTML structure and merges
-                _create_word_table_from_html(paragraph, table_data, doc, rows, table_num, caption)
-                return
+                return _create_word_table_from_html(paragraph, table_data, doc, rows, table_num, caption)
                 
     except ImportError:
         # BeautifulSoup not available, fallback to regex
@@ -98,6 +97,7 @@ def process_table_content(paragraph: Paragraph, html_content: str, doc: Optional
     
     # Fallback: strip HTML and add as text
     _fallback_to_text(paragraph, html_content)
+    return None
 
 
 def _parse_html_table_to_grid(rows) -> tuple:
@@ -243,16 +243,17 @@ def _add_table_caption(doc: Document, paragraph: Paragraph, word_table, table_nu
     return caption_para
 
 
-def _add_table_spacing(doc: Document, word_table) -> None:
-    """Add spacing paragraph after the table."""
+def _add_table_spacing(doc: Document, word_table) -> Paragraph:
+    """Add spacing paragraph after the table and return it."""
     spacing_para = doc.add_paragraph()
     word_table._element.addnext(spacing_para._p)
     spacing_para.paragraph_format.space_after = Pt(6)
     spacing_para.paragraph_format.space_before = Pt(0)
+    return spacing_para
 
 
 def _create_word_table_from_html(paragraph: Paragraph, table_data: list, doc: Document,
-                                 html_rows, table_num: int, caption: str) -> None:
+                                 html_rows, table_num: int, caption: str) -> Optional[Paragraph]:
     """
     Create Word table from HTML table data with proper formatting and merges.
     
@@ -266,7 +267,7 @@ def _create_word_table_from_html(paragraph: Paragraph, table_data: list, doc: Do
     """
     try:
         if not table_data or len(table_data) == 0:
-            return
+            return None
             
         # Determine table size
         max_cols = max(len(row) for row in table_data) if table_data else 0
@@ -286,7 +287,7 @@ def _create_word_table_from_html(paragraph: Paragraph, table_data: list, doc: Do
             caption_para = _add_table_caption(doc, paragraph, word_table, table_num, caption)
             
             # Add spacing after table
-            _add_table_spacing(doc, word_table)
+            spacing_para = _add_table_spacing(doc, word_table)
             
             # Parse HTML to get merge information
             merge_map = _parse_merge_information(html_rows)
@@ -296,10 +297,14 @@ def _create_word_table_from_html(paragraph: Paragraph, table_data: list, doc: Do
             
             # Second pass: Fill table with data and apply styling
             _fill_and_style_table(word_table, table_data, merged_cells)
-            
-    except Exception as e:
+
+            # Return the last paragraph inserted so callers can keep insertion order
+            return spacing_para
+
+    except Exception:
         # If anything fails, fall back to text
         _fallback_to_text(paragraph, str(table_data))
+        return None
 
 
 def _parse_merge_information(html_rows) -> dict:

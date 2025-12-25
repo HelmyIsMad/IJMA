@@ -305,10 +305,10 @@ def _insert_tables(paragraph: Paragraph, doc: Optional[Document]) -> None:
                     current_p_element.addnext(temp_para._p)
                     
                     # Process HTML table
-                    process_table_content(temp_para, str(item), doc, table_num, caption)
-                    
-                    # Update position tracking
-                    current_p_element = temp_para._p
+                    last_para = process_table_content(temp_para, str(item), doc, table_num, caption)
+
+                    # Update position tracking: continue insertion after the whole table block
+                    current_p_element = (last_para._p if last_para is not None else temp_para._p)
                     
                     # Increment table counter and reset caption
                     table_num += 1
