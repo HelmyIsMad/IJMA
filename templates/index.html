@@ -1,0 +1,693 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <h1 class="text-center mb-4">IJMA Document Generator</h1>
+        
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong> {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('generate') }}" enctype="multipart/form-data">
+            <!-- Basic Information Section -->
+            <div class="form-section">
+                <h3 class="section-title">Basic Information</h3>
+                
+                <div class="mb-3">
+                    <label for="research_title" class="form-label">Research Title *</label>
+                    <input type="text" class="form-control" id="research_title" name="research_title" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="research_type" class="form-label">Research Type</label>
+                    <input type="text" class="form-control" id="research_type" name="research_type" placeholder="e.g., Original Article, Case Report, Review, etc.">
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="receive_date" class="form-label">Received Date</label>
+                        <input type="text" class="form-control" id="receive_date" name="receive_date" 
+                               placeholder="e.g., 15 January 2024">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="accept_date" class="form-label">Accepted Date</label>
+                        <input type="text" class="form-control" id="accept_date" name="accept_date" 
+                               placeholder="e.g., 28 February 2024">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authors Section -->
+            <div class="form-section">
+                <h3 class="section-title">Authors & Affiliations</h3>
+                <div id="authors-container">
+                    <div class="author-group mb-4 border rounded p-3" style="background-color: #fff;">
+                        <h6 class="text-primary">Author 1</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="author_name_1" class="form-label">Author Name *</label>
+                                <input type="text" class="form-control" id="author_name_1" name="author_name_1" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="author_affiliation_1" class="form-label">Affiliation</label>
+                                <textarea class="form-control" id="author_affiliation_1" name="author_affiliation_1" rows="2"></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="author_email_1" class="form-label">Email (Corresponding Author)</label>
+                                <input type="email" class="form-control" id="author_email_1" name="author_email_1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addAuthor()">
+                    <i class="bi bi-plus"></i> Add Author
+                </button>
+            </div>
+
+            <!-- Content Sections -->
+            <div class="form-section">
+                <h3 class="section-title">Abstract & Keywords</h3>
+                
+                <div class="mb-3">
+                    <label for="abstract" class="form-label">Abstract</label>
+                    <textarea class="form-control" id="abstract" name="abstract" rows="8" 
+                              placeholder="Write your abstract here..."></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="keywords" class="form-label">Keywords</label>
+                    <input type="text" class="form-control" id="keywords" name="keywords" 
+                           placeholder="Keyword 1; Keyword 2; Keyword 3">
+                </div>
+            </div>
+
+            <!-- Research Content -->
+            <div class="form-section">
+                <h3 class="section-title">Research Content</h3>
+                
+                <div class="mb-3">
+                    <label for="introduction" class="form-label">Introduction</label>
+                    <textarea class="form-control" id="introduction" name="introduction" rows="6" 
+                              placeholder="Write your introduction here..."></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="aim_of_work" class="form-label">Aim of the Work</label>
+                    <textarea class="form-control" id="aim_of_work" name="aim_of_work" rows="4" 
+                              placeholder="Describe the aim of your work..."></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="patients_methods" class="form-label">Patients and Methods</label>
+                    <textarea class="form-control" id="patients_methods" name="patients_methods" rows="6" 
+                              placeholder="Describe your methodology..."></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="results" class="form-label">Results</label>
+                    <textarea class="form-control" id="results" name="results" rows="6" 
+                              placeholder="Present your results..."></textarea>
+                </div>
+            </div>
+
+            <!-- Tables Section -->
+            <div class="form-section">
+                <h3 class="section-title">Tables</h3>
+                <div id="tables-container">
+                    <div class="table-group mb-4 border rounded p-3" style="background-color: #fff;">
+                        <h6 class="text-success">Table 1</h6>
+                        <div class="mb-3">
+                            <label for="table_info_1" class="form-label">Table Caption/Description</label>
+                            <input type="text" class="form-control" id="table_info_1" name="table_info_1" 
+                                   placeholder="Table 1: Description of the table...">
+                        </div>
+                        <div class="mb-3">
+                            <label for="table_content_1" class="form-label">Table Content (Paste from Word)</label>
+                            <div class="table-paste-area border rounded p-2" 
+                                 contenteditable="true" 
+                                 id="table_content_1" 
+                                 data-target="table_content_1_hidden"
+                                 style="min-height: 200px; max-height: 400px; overflow-y: auto; background-color: #fff;"
+                                 placeholder="Paste your table here from Word - it will preserve formatting and structure">
+                            </div>
+                            <input type="hidden" id="table_content_1_hidden" name="table_content_1" />
+                            <small class="text-muted">Copy your table from Word and paste it here. The table structure will be preserved.</small>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="addTable()">
+                    <i class="bi bi-plus"></i> Add Table
+                </button>
+            </div>
+
+            <!-- Figures Section -->
+            <div class="form-section">
+                <h3 class="section-title">Figures</h3>
+                <div id="figures-container">
+                    <div class="figure-group mb-4 border rounded p-3" style="background-color: #fff;">
+                        <h6 class="text-warning">Figure 1</h6>
+                        <div class="mb-3">
+                            <label for="figure_info_1" class="form-label">Figure Caption/Description</label>
+                            <input type="text" class="form-control" id="figure_info_1" name="figure_info_1" 
+                                   placeholder="Figure 1: Description of the figure...">
+                        </div>
+                        <div class="mb-3">
+                            <label for="figure_content_1" class="form-label">Figure Content (Paste from Word)</label>
+                            <div class="figure-paste-area border rounded p-2" 
+                                 contenteditable="true" 
+                                 id="figure_content_1" 
+                                 data-target="figure_content_1_hidden"
+                                 style="min-height: 150px; max-height: 300px; overflow-y: auto; background-color: #fff;"
+                                 placeholder="Paste your figure/image here from Word - images will be preserved">
+                            </div>
+                            <input type="hidden" id="figure_content_1_hidden" name="figure_content_1" />
+                            <small class="text-muted">Copy your figure/image from Word and paste it here. Images will be preserved.</small>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-warning btn-sm" onclick="addFigure()">
+                    <i class="bi bi-plus"></i> Add Figure
+                </button>
+            </div>
+
+            <!-- Discussion & References -->
+            <div class="form-section">
+                <h3 class="section-title">Discussion & References</h3>
+                
+                <div class="mb-3">
+                    <label for="discussion" class="form-label">Discussion</label>
+                    <textarea class="form-control" id="discussion" name="discussion" rows="8" 
+                              placeholder="Write your discussion here..."></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="references" class="form-label">References</label>
+                    <textarea class="form-control" id="references" name="references" rows="10" 
+                              placeholder="List your references here...&#10;1. Author A, et al. Title. Journal. Year;Volume:Pages.&#10;2. Author B, et al. Title. Journal. Year;Volume:Pages."></textarea>
+                </div>
+            </div>
+
+            <div class="text-center mb-5">
+                <button type="submit" class="btn btn-primary btn-lg px-5 me-3">
+                    Generate Document
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-lg px-5" onclick="clearForm()">
+                    Clear Form
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let authorCount = 1;
+let tableCount = 1;
+let figureCount = 1;
+
+function addAuthor() {
+    authorCount++;
+    const container = document.getElementById('authors-container');
+    const div = document.createElement('div');
+    div.className = 'author-group mb-4 border rounded p-3';
+    div.style.backgroundColor = '#fff';
+    div.innerHTML = `
+        <h6 class="text-primary d-flex justify-content-between align-items-center">
+            Author ${authorCount}
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeAuthor(this)">Remove</button>
+        </h6>
+        <div class="row">
+            <div class="col-md-6">
+                <label for="author_name_${authorCount}" class="form-label">Author Name</label>
+                <input type="text" class="form-control" id="author_name_${authorCount}" name="author_name_${authorCount}">
+            </div>
+            <div class="col-md-6">
+                <label for="author_affiliation_${authorCount}" class="form-label">Affiliation</label>
+                <textarea class="form-control" id="author_affiliation_${authorCount}" name="author_affiliation_${authorCount}" rows="2"></textarea>
+            </div>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function addTable() {
+    tableCount++;
+    console.log('Adding table number:', tableCount);
+    const container = document.getElementById('tables-container');
+    const div = document.createElement('div');
+    div.className = 'table-group mb-4 border rounded p-3';
+    div.style.backgroundColor = '#fff';
+    div.innerHTML = `
+        <h6 class="text-success d-flex justify-content-between align-items-center">
+            Table ${tableCount}
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeTable(this)">Remove</button>
+        </h6>
+        <div class="mb-3">
+            <label for="table_info_${tableCount}" class="form-label">Table Caption/Description</label>
+            <input type="text" class="form-control" id="table_info_${tableCount}" name="table_info_${tableCount}" 
+                   placeholder="Table ${tableCount}: Description of the table...">
+        </div>
+        <div class="mb-3">
+            <label for="table_content_${tableCount}" class="form-label">Table Content (Paste from Word)</label>
+            <div class="table-paste-area border rounded p-2" 
+                 contenteditable="true" 
+                 id="table_content_${tableCount}" 
+                 data-target="table_content_${tableCount}_hidden"
+                 style="min-height: 200px; max-height: 400px; overflow-y: auto; background-color: #fff;"
+                 placeholder="Paste your table here from Word - it will preserve formatting and structure">
+            </div>
+            <input type="hidden" id="table_content_${tableCount}_hidden" name="table_content_${tableCount}" />
+            <small class="text-muted">Copy your table from Word and paste it here. The table structure will be preserved.</small>
+        </div>
+    `;
+    container.appendChild(div);
+    
+    // Setup paste area for the new table
+    setupTablePasteArea(`table_content_${tableCount}`);
+    console.log('Created table element with ID:', `table_content_${tableCount}`);
+    
+    // Save immediately after adding
+    setTimeout(() => {
+        console.log('About to save after adding table...');
+        saveFormData();
+    }, 100);
+}
+
+function addFigure() {
+    figureCount++;
+    const container = document.getElementById('figures-container');
+    const div = document.createElement('div');
+    div.className = 'figure-group mb-4 border rounded p-3';
+    div.style.backgroundColor = '#fff';
+    div.innerHTML = `
+        <h6 class="text-warning d-flex justify-content-between align-items-center">
+            Figure ${figureCount}
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFigure(this)">Remove</button>
+        </h6>
+        <div class="mb-3">
+            <label for="figure_info_${figureCount}" class="form-label">Figure Caption/Description</label>
+            <input type="text" class="form-control" id="figure_info_${figureCount}" name="figure_info_${figureCount}" 
+                   placeholder="Figure ${figureCount}: Description of the figure...">
+        </div>
+        <div class="mb-3">
+            <label for="figure_content_${figureCount}" class="form-label">Figure Content (Paste from Word)</label>
+            <div class="figure-paste-area border rounded p-2" 
+                 contenteditable="true" 
+                 id="figure_content_${figureCount}" 
+                 data-target="figure_content_${figureCount}_hidden"
+                 style="min-height: 150px; max-height: 300px; overflow-y: auto; background-color: #fff;"
+                 placeholder="Paste your figure/image here from Word - images will be preserved">
+            </div>
+            <input type="hidden" id="figure_content_${figureCount}_hidden" name="figure_content_${figureCount}" />
+            <small class="text-muted">Copy your figure/image from Word and paste it here. Images will be preserved.</small>
+        </div>
+    `;
+    container.appendChild(div);
+    
+    // Setup paste area for the new figure
+    setupPasteArea(`figure_content_${figureCount}`);
+    
+    // Save immediately after adding
+    setTimeout(saveFormData, 100);
+}
+
+function removeAuthor(button) {
+    button.closest('.author-group').remove();
+    saveFormData();
+}
+
+function removeTable(button) {
+    button.closest('.table-group').remove();
+    saveFormData();
+}
+
+function removeFigure(button) {
+    button.closest('.figure-group').remove();
+    saveFormData();
+}
+
+// Handle table and figure paste functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Load saved form data
+    loadFormData();
+    
+    // Setup existing paste areas
+    setupPasteArea('table_content_1');
+    setupPasteArea('figure_content_1');
+    
+    // Setup paste handling for dynamically added tables and figures
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('table-paste-area') || e.target.classList.contains('figure-paste-area')) {
+            updateHiddenInput(e.target);
+        }
+    });
+    
+    // Also handle paste events specifically
+    document.addEventListener('paste', function(e) {
+        if (e.target.classList.contains('table-paste-area') || e.target.classList.contains('figure-paste-area')) {
+            setTimeout(() => updateHiddenInput(e.target), 100);
+        }
+    });
+});
+
+function setupPasteArea(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.addEventListener('input', function() {
+            updateHiddenInput(this);
+        });
+        element.addEventListener('paste', (e) => {
+            // Allow paste, then normalize images and update hidden input
+            setTimeout(async () => {
+                await normalizeImages(element);
+                updateHiddenInput(element);
+            }, 100);
+        });
+    }
+}
+
+// Keep backward compatibility
+function setupTablePasteArea(elementId) {
+    setupPasteArea(elementId);
+}
+
+function updateHiddenInput(contentEditableElement) {
+    const targetId = contentEditableElement.getAttribute('data-target');
+    const hiddenInput = document.getElementById(targetId);
+    
+    if (hiddenInput) {
+        // Get the HTML content including table/image structure
+        let content = contentEditableElement.innerHTML;
+
+        // If this is a table area, preserve HTML table structure
+        if (contentEditableElement.classList.contains('table-paste-area')) {
+            console.log('Processing table area:', targetId);
+            console.log('Content length:', content.length);
+            console.log('Has <table> tag:', content.toLowerCase().includes('<table'));
+            console.log('Content preview:', content.substring(0, 200));
+            
+            // If HTML contains a <table>, preserve full HTML structure
+            if (content.toLowerCase().includes('<table')) {
+                hiddenInput.value = content;
+                console.log('✓ Stored HTML table in hidden input');
+                return;
+            }
+            // Fallback: try to extract as array if no table element found
+            const tableData = extractTableAsArray(contentEditableElement);
+            if (tableData.length > 0) {
+                hiddenInput.value = JSON.stringify(tableData);
+                console.log('✓ Stored table as JSON array:', tableData.length, 'rows');
+                return;
+            }
+            console.log('⚠ No table structure found');
+        }
+
+        // Normalize pasted images to inline base64 data URLs, then set hidden input
+        normalizeImages(contentEditableElement).then(() => {
+            content = contentEditableElement.innerHTML;
+
+            // Minimal cleanup while preserving structure
+            content = content.replace(/<div><br><\/div>/g, '\n');
+            content = content.replace(/<div>/g, '\n');
+            content = content.replace(/<\/div>/g, '');
+            content = content.replace(/<br>/g, '\n');
+
+            // If it contains images or tables, keep HTML
+            if (content.toLowerCase().includes('<img') || content.toLowerCase().includes('<table')) {
+                hiddenInput.value = content;
+            } else {
+                // Plain text fallback
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = content;
+                hiddenInput.value = tempDiv.textContent || tempDiv.innerText || '';
+            }
+        });
+    }
+}
+
+// Image normalization: convert blob image sources to data URLs so backend can embed them
+async function normalizeImages(container) {
+    const imgNodes = Array.from(container.querySelectorAll('img'));
+    const conversions = imgNodes.map(async (img) => {
+        try {
+            const src = img.getAttribute('src') || '';
+            if (src.startsWith('data:image/')) {
+                return; // already inline
+            }
+            if (src.startsWith('blob:')) {
+                const response = await fetch(src);
+                const blob = await response.blob();
+                const dataUrl = await blobToDataURL(blob);
+                img.setAttribute('src', dataUrl);
+                return;
+            }
+            // If the image is pasted as a file object (Clipboard API), try to detect and inline it
+            // Note: Some browsers insert images without accessible blob src; best-effort fallback below
+        } catch (err) {
+            console.warn('normalizeImages: failed to inline image', err);
+        }
+    });
+    await Promise.all(conversions);
+}
+
+function blobToDataURL(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+// Removed image compression functions - no restrictions on image size
+
+function extractTableAsArray(element) {
+    const tableData = [];
+    
+    // Find table element in the contenteditable area
+    const table = element.querySelector('table');
+    if (!table) {
+        return tableData;
+    }
+    
+    // Extract rows
+    const rows = table.querySelectorAll('tr');
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const rowData = [];
+        
+        // Extract cells (both td and th)
+        const cells = row.querySelectorAll('td, th');
+        for (let j = 0; j < cells.length; j++) {
+            const cell = cells[j];
+            // Get text content and clean it up
+            let cellText = cell.textContent || cell.innerText || '';
+            cellText = cellText.trim();
+            rowData.push(cellText);
+        }
+        
+        if (rowData.length > 0) {
+            tableData.push(rowData);
+        }
+    }
+    
+    return tableData;
+}
+
+// Form persistence functions
+function saveFormData() {
+    const form = document.querySelector('form');
+    const formData = new FormData(form);
+    const data = {};
+    
+    // Save regular form fields
+    for (let [key, value] of formData.entries()) {
+        if (data[key]) {
+            // Handle multiple values (like multiple authors)
+            if (Array.isArray(data[key])) {
+                data[key].push(value);
+            } else {
+                data[key] = [data[key], value];
+            }
+        } else {
+            data[key] = value;
+        }
+    }
+    
+    // Save contenteditable areas with full HTML content
+    const contenteditables = {};
+    document.querySelectorAll('[contenteditable="true"]').forEach(element => {
+        const elementId = element.id;
+        if (elementId) {
+            // Store the full innerHTML for reliable restoration
+            contenteditables[elementId] = element.innerHTML;
+            console.log('Saving contenteditable:', elementId, 'Length:', element.innerHTML.length);
+        }
+    });
+    data['_contenteditables'] = contenteditables;
+    
+    // Also save hidden input values
+    document.querySelectorAll('input[type="hidden"]').forEach(input => {
+        if (input.id && input.id.includes('_hidden')) {
+            data[input.id] = input.value;
+        }
+    });
+    
+    // Save current counts
+    data['_authorCount'] = authorCount;
+    data['_tableCount'] = tableCount;
+    data['_figureCount'] = figureCount;
+    
+    console.log('Saving form data with', Object.keys(contenteditables).length, 'contenteditable areas');
+    localStorage.setItem('ijma_form_data', JSON.stringify(data));
+}
+
+function loadFormData() {
+    const savedData = localStorage.getItem('ijma_form_data');
+    if (!savedData) return;
+    
+    try {
+        const data = JSON.parse(savedData);
+        console.log('Loading form data...');
+        
+        // Restore counts first and create dynamic elements
+        if (data['_authorCount'] && data['_authorCount'] > 1) {
+            while (authorCount < data['_authorCount']) {
+                addAuthor();
+            }
+        }
+        if (data['_tableCount'] && data['_tableCount'] > 1) {
+            console.log('Restoring', data['_tableCount'], 'tables');
+            while (tableCount < data['_tableCount']) {
+                addTable();
+            }
+        }
+        if (data['_figureCount'] && data['_figureCount'] > 1) {
+            console.log('Restoring', data['_figureCount'], 'figures');
+            while (figureCount < data['_figureCount']) {
+                addFigure();
+            }
+        }
+        
+        // Give time for DOM elements to be fully created
+        setTimeout(() => {
+            console.log('Starting field restoration...');
+            
+            // Restore regular form fields first
+            Object.keys(data).forEach(key => {
+                if (key.startsWith('_')) return; // Skip meta fields
+                
+                const element = document.getElementById(key) || document.querySelector(`[name="${key}"]`);
+                if (element && element.tagName !== 'DIV') {
+                    if (element.type === 'checkbox' || element.type === 'radio') {
+                        element.checked = data[key] === 'on' || data[key] === element.value;
+                    } else {
+                        element.value = Array.isArray(data[key]) ? data[key][0] : data[key];
+                    }
+                }
+            });
+            
+            // Restore contenteditable areas from the dedicated storage
+            if (data['_contenteditables']) {
+                console.log('Restoring', Object.keys(data['_contenteditables']).length, 'contenteditable areas');
+                Object.keys(data['_contenteditables']).forEach(elementId => {
+                    const element = document.getElementById(elementId);
+                    if (element && element.contentEditable === 'true') {
+                        const content = data['_contenteditables'][elementId];
+                        console.log('Restoring', elementId, '- Content length:', content.length);
+                        element.innerHTML = content;
+                        
+                        // Restore corresponding hidden input directly from saved data
+                        const hiddenInputId = elementId + '_hidden';
+                        const hiddenInput = document.getElementById(hiddenInputId);
+                        if (hiddenInput && data[hiddenInputId]) {
+                            hiddenInput.value = data[hiddenInputId];
+                            console.log('Restored hidden input:', hiddenInputId, '- Length:', data[hiddenInputId].length);
+                        }
+                        
+                        // Also update hidden input from current content as fallback
+                        setTimeout(() => {
+                            updateHiddenInput(element);
+                        }, 100);
+                    } else if (!element) {
+                        console.warn('Element not found:', elementId);
+                    }
+                });
+            }
+            
+            console.log('Field restoration complete');
+        }, 600); // Increased delay to ensure DOM is ready
+        
+    } catch (e) {
+        console.error('Error loading form data:', e);
+    }
+}
+
+function clearForm() {
+    if (confirm('Are you sure you want to clear all form data? This action cannot be undone.')) {
+        // Clear localStorage
+        localStorage.removeItem('ijma_form_data');
+        
+        // Reset the page
+        location.reload();
+    }
+}
+
+// Auto-save form data on input
+document.addEventListener('input', function(e) {
+    saveFormData();
+});
+
+// Auto-save on paste events for contenteditable areas
+document.addEventListener('paste', function(e) {
+    setTimeout(saveFormData, 200);
+});
+
+// Auto-save on contenteditable changes
+document.addEventListener('keyup', function(e) {
+    if (e.target.contentEditable === 'true') {
+        saveFormData();
+    }
+});
+
+// Auto-save on focus out
+document.addEventListener('blur', function(e) {
+    if (e.target.contentEditable === 'true' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        saveFormData();
+    }
+}, true);
+
+// Ensure hidden inputs are up-to-date before form submission
+function syncHiddenInputs() {
+   const elements = document.querySelectorAll('[contenteditable="true"]');
+   elements.forEach((el) => updateHiddenInput(el));
+}
+
+document.addEventListener('submit', function(e) {
+   if (e.target.tagName === 'FORM') {
+       e.preventDefault();
+       const form = e.target;
+       const contentAreas = Array.from(document.querySelectorAll('[contenteditable="true"]'));
+       // Normalize images, then update hidden inputs, then submit
+       Promise.all(contentAreas.map((el) => normalizeImages(el))).then(() => {
+           contentAreas.forEach((el) => updateHiddenInput(el));
+           saveFormData();
+           form.submit();
+       }).catch(() => {
+           // Even if normalization fails, try to submit with current content
+           contentAreas.forEach((el) => updateHiddenInput(el));
+           saveFormData();
+           form.submit();
+       });
+   }
+});
+
+// Manual save every 2 seconds
+setInterval(saveFormData, 2000);
+</script>
+{% endblock %}

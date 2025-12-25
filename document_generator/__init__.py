@@ -1,0 +1,1 @@
+"""IJMA document generation package."""
