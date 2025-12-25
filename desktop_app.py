@@ -33,7 +33,7 @@ class IJMAApi:
 
             default_name = "IJMA_document.docx"
             save_paths = window.create_file_dialog(
-                webview.SAVE_DIALOG,
+                webview.FileDialog.SAVE,
                 save_filename=default_name,
                 file_types=("Word Document (*.docx)",),
             )
