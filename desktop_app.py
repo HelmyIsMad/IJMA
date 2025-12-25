@@ -28,14 +28,14 @@ class IJMAApi:
             # Ask user where to save.
             # NOTE: webview's file dialog returns a list of selected paths or None.
             window = webview.windows[0] if webview.windows else None
+            if window is None:
+                return {"error": "No active window for file dialog"}
+
             default_name = "IJMA_document.docx"
-            save_paths = webview.create_file_dialog(
+            save_paths = window.create_file_dialog(
                 webview.SAVE_DIALOG,
                 save_filename=default_name,
                 file_types=("Word Document (*.docx)",),
-                directory='',
-                allow_multiple=False,
-                window=window,
             )
             if not save_paths:
                 return {"cancelled": True}

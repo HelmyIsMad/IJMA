@@ -589,10 +589,14 @@
 
         setStatus('info', 'Generating document...');
         const result = await window.pywebview.api.generate_document_with_save_dialog(payload);
+        console.log('generate_document_with_save_dialog result:', result);
+
         if (result && result.saved_path) {
           setStatus('success', `Saved: <code>${result.saved_path}</code>`);
         } else if (result && result.cancelled) {
           setStatus('info', 'Save cancelled.');
+        } else if (result && result.error) {
+          setStatus('error', 'Document generation failed: ' + result.error);
         } else {
           setStatus('error', 'Document generation failed (no details).');
         }
