@@ -6,67 +6,71 @@ from .formatters import format_title
 
 
 def process_authors_and_affiliations(authors: List[str], affiliations: List[str]) -> tuple:
-    """
-    Process authors and affiliations, assigning numbers to affiliations.
-    
-    Args:
-        authors: List of author names
-        affiliations: List of author affiliations
-        
+    """Process authors and affiliations.
+
+    Rules:
+    - If there is only **one unique affiliation**, do **not** number affiliations.
+    - Put asterisk/affiliation numbers **after** the author name (not before).
+      Examples:
+        - Single affiliation: "Alice*; Bob;"
+        - Multiple affiliations: "Alice*1; Bob2;"
+
     Returns:
-        Tuple of (formatted_authors, formatted_affiliations)
+        (formatted_authors, formatted_affiliations)
+        where each is a list of string chunks consumed by the value inserter.
     """
     # Format affiliations
     for i in range(len(affiliations)):
         affiliations[i] = format_title(affiliations[i]) + '.'
-    
-    index = 1
-    new_authors = []
-    new_affiliation = []
-    affiliation_map = {}  # Track which affiliation gets which number
-    
-    # First pass: identify unique affiliations
-    unique_affiliations = []
+
+    new_authors: List[str] = []
+    new_affiliation: List[str] = []
+
+    # Unique affiliations preserving order
+    unique_affiliations: List[str] = []
     for aff in affiliations:
-        if aff not in unique_affiliations:
+        if aff and aff not in unique_affiliations:
             unique_affiliations.append(aff)
-    
-    # Check if all affiliations are the same
-    all_same_affiliation = len(unique_affiliations) == 1
-    
-    for i, aff in enumerate(affiliations):
-        # Check if this affiliation already has a number assigned
-        if aff in affiliation_map:
-            aff_number = affiliation_map[aff]
-        else:
-            # Assign new number to this affiliation
-            aff_number = index
-            affiliation_map[aff] = index
-            # ALWAYS add affiliation with number (for affiliation list display)
-            new_affiliation.append(str(index))
-            new_affiliation.append(aff)
-            index += 1
-        
-        # Build the superscript part for AUTHORS
-        if all_same_affiliation:
-            # Single affiliation: only first author gets asterisk, others get nothing
+
+    single_unique_affiliation = len(unique_affiliations) <= 1
+
+    # Map affiliation -> number (only used when multiple unique affiliations exist)
+    affiliation_map: Dict[str, int] = {}
+    next_num = 1
+
+    for i, (author, aff) in enumerate(zip(authors, affiliations)):
+        author = (author or '').strip()
+        aff = (aff or '').strip()
+
+        suffix = ''
+
+        if single_unique_affiliation:
+            # No numbering in affiliation list, only first author gets '*'
             if i == 0:
-                superscript_part = " * "
-            else:
-                superscript_part = " "
+                suffix = '*'
         else:
-            # Multiple affiliations: show numbers for everyone
-            if i == 0:
-                # First author (corresponding author): asterisk + number
-                superscript_part = f" *{aff_number} "
+            # Assign or reuse number for the affiliation
+            if aff in affiliation_map:
+                aff_number = affiliation_map[aff]
             else:
-                # Other authors: just the number
-                superscript_part = ' ' + str(aff_number) + ' '
-        
-        # Add superscript before name, then name, then semicolon
-        new_authors.append(superscript_part)
-        new_authors.append(f"{authors[i]}")
-        new_authors.append(";")
+                aff_number = next_num
+                affiliation_map[aff] = next_num
+                new_affiliation.append(str(next_num))
+                new_affiliation.append(aff)
+                next_num += 1
+
+            # First author: * + number, others: number
+            suffix = f"*{aff_number}" if i == 0 else str(aff_number)
+
+        # Author name first, then suffix (if any), then semicolon
+        new_authors.append(author)
+        if suffix:
+            new_authors.append(suffix)
+        new_authors.append(';')
+
+    # If single unique affiliation: include the affiliation once, without a leading number
+    if single_unique_affiliation and unique_affiliations:
+        new_affiliation.append(unique_affiliations[0])
 
     return new_authors, new_affiliation
 

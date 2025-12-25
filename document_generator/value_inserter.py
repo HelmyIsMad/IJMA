@@ -112,30 +112,77 @@ def _insert_research_title(paragraph: Paragraph) -> None:
 
 
 def _insert_authors(paragraph: Paragraph) -> None:
-    """Insert authors with superscript numbering."""
+    """Insert authors with superscript markers.
+
+    Supports tokens in VALUES['{{authors}}'] like:
+      - ["Alice", "*", ";", "Bob", ";"]
+      - ["Alice", "*1", ";", "Bob", "2", ";"]
+
+    i.e., author name first, then optional marker token, then semicolon.
+    """
     color2 = "#FF0000"
-    for i, author_text in enumerate(VALUES["{{authors}}"]):
-        # Apply percentage formatting to author text
-        formatted_author = int_percent_to_float_percent(author_text)
-        run = paragraph.add_run(formatted_author)
-        position = i % 3
-        
-        if position == 0:
-            # Superscript part (*1, *2, 1, 2, etc.)
-            apply_hardcoded_style(run, font_name="Times New Roman", font_size=10, bold=True, color=color2, superscript=True, spacing=0, scale=100)
-        elif position == 1:
-            # Author name
+
+    def _is_marker_token(t: str) -> bool:
+        t = (t or '').strip()
+        if not t:
+            return False
+        if t == '*':
+            return True
+        if t.isdigit():
+            return True
+        # '*1', '*2', etc.
+        if t.startswith('*') and t[1:].isdigit():
+            return True
+        return False
+
+    for token in VALUES["{{authors}}"]:
+        formatted = int_percent_to_float_percent(str(token))
+        run = paragraph.add_run(formatted)
+
+        if str(token) == ';':
             apply_hardcoded_style(run, font_name="Times New Roman", font_size=10, bold=True, spacing=0, scale=100)
+        elif _is_marker_token(str(token)):
+            apply_hardcoded_style(
+                run,
+                font_name="Times New Roman",
+                font_size=10,
+                bold=True,
+                color=color2,
+                superscript=True,
+                spacing=0,
+                scale=100,
+            )
         else:
-            # Semicolon
+            # Author name
             apply_hardcoded_style(run, font_name="Times New Roman", font_size=10, bold=True, spacing=0, scale=100)
 
 
 def _insert_affiliation(paragraph: Paragraph) -> None:
-    """Insert affiliation with superscript numbers."""
+    """Insert affiliations.
+
+    Supports two formats:
+    - Numbered list tokens: ["1", "Aff one.", "2", "Aff two."]
+    - Single/un-numbered: ["Aff one."]
+    """
     paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    for i, text in enumerate(VALUES["{{affiliation}}"]):
-        run = paragraph.add_run(text)
+    items = VALUES["{{affiliation}}"]
+
+    # Un-numbered mode if the first token isn't a digit
+    if not items:
+        return
+
+    if not str(items[0]).strip().isdigit():
+        # Print each item on its own line
+        for idx, aff in enumerate(items):
+            run = paragraph.add_run(str(aff))
+            apply_hardcoded_style(run, font_size=8, spacing=0, scale=100)
+            if idx < len(items) - 1:
+                paragraph.add_run("\n")
+        return
+
+    # Numbered mode: tokens are [num, aff, num, aff, ...]
+    for i, text in enumerate(items):
+        run = paragraph.add_run(str(text))
         if i % 2:
             apply_hardcoded_style(run, font_size=8, spacing=0, scale=100)
             paragraph.add_run("\n")
