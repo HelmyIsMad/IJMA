@@ -14,6 +14,32 @@ import re
 from .style_handler import apply_hardcoded_style
 
 
+def _cleanup_newlines(text: str) -> str:
+    """Normalize newlines inside table cells.
+
+    Keeps intentional line breaks but removes extra blank lines and trailing/leading newlines.
+    """
+    lines = [ln.strip() for ln in text.split('\n')]
+
+    # Remove leading/trailing empty lines
+    while lines and not lines[0]:
+        lines.pop(0)
+    while lines and not lines[-1]:
+        lines.pop()
+
+    # Collapse consecutive empty lines into a single empty line
+    cleaned: List[str] = []
+    prev_empty = False
+    for ln in lines:
+        is_empty = (ln == '')
+        if is_empty and prev_empty:
+            continue
+        cleaned.append(ln)
+        prev_empty = is_empty
+
+    return '\n'.join(cleaned)
+
+
 def _normalize_symbol_spacing_preserve_newlines(text: str) -> str:
     """Normalize spacing around '=' and '±' without destroying newlines."""
     # Apply per-line so we don't collapse \n into spaces.
@@ -32,7 +58,7 @@ def _normalize_symbol_spacing_preserve_newlines(text: str) -> str:
         line = re.sub(r'[ \t]+', ' ', line)
         normalized_lines.append(line.strip())
 
-    return '\n'.join(normalized_lines)
+    return _cleanup_newlines('\n'.join(normalized_lines))
 
 
 def process_table_content(paragraph: Paragraph, html_content: str, doc: Optional[Document] = None, 
@@ -117,7 +143,7 @@ def _parse_html_table_to_grid(rows) -> tuple:
                 break
             
             # Get cell attributes
-            cell_text = cell.get_text(separator='\n').strip()
+            cell_text = _cleanup_newlines(cell.get_text(separator='\n'))
             rowspan = int(cell.get('rowspan', 1))
             colspan = int(cell.get('colspan', 1))
             
@@ -376,6 +402,7 @@ def _fill_and_style_table(word_table, table_data: list, merged_cells: set) -> No
                 from .text_formatter import apply_percentage_formatting
                 cell_text = apply_percentage_formatting(cell_text)
                 cell_text = _normalize_symbol_spacing_preserve_newlines(cell_text)
+                cell_text = _cleanup_newlines(cell_text)
                 cell.text = cell_text
                 
                 # Style the cell
