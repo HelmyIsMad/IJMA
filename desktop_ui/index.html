@@ -141,7 +141,7 @@
                 </div>
                 <div class="mb-3">
                   <label for="table_content_1" class="form-label">Table Content (Paste from Word)</label>
-                  <div class="table-paste-area border rounded p-2" contenteditable="true" id="table_content_1" data-target="table_content_1_hidden" style="min-height: 200px; max-height: 400px; overflow-y: auto; background-color: #fff;" placeholder="Paste your table here from Word - it will preserve formatting and structure"></div>
+                  <div class="table-paste-area border rounded p-2" contenteditable="true" id="table_content_1" data-target="table_content_1_hidden" style="background-color: #fff; overflow: hidden;" placeholder="Paste your table here from Word - it will preserve formatting and structure"></div>
                   <input type="hidden" id="table_content_1_hidden" name="table_content_1" />
                   <small class="text-muted">Copy your table from Word and paste it here. The table structure will be preserved.</small>
                 </div>
@@ -164,7 +164,7 @@
                 </div>
                 <div class="mb-3">
                   <label for="figure_content_1" class="form-label">Figure Content (Paste from Word)</label>
-                  <div class="figure-paste-area border rounded p-2" contenteditable="true" id="figure_content_1" data-target="figure_content_1_hidden" style="min-height: 150px; max-height: 300px; overflow-y: auto; background-color: #fff;" placeholder="Paste your figure/image here from Word - images will be preserved"></div>
+                  <div class="figure-paste-area border rounded p-2" contenteditable="true" id="figure_content_1" data-target="figure_content_1_hidden" style="background-color: #fff; overflow: hidden;" placeholder="Paste your figure/image here from Word - images will be preserved"></div>
                   <input type="hidden" id="figure_content_1_hidden" name="figure_content_1" />
                   <small class="text-muted">Copy your figure/image from Word and paste it here. Images will be preserved.</small>
                 </div>
@@ -262,7 +262,7 @@
         </div>
         <div class="mb-3">
           <label for="table_content_${tableCount}" class="form-label">Table Content (Paste from Word)</label>
-          <div class="table-paste-area border rounded p-2" contenteditable="true" id="table_content_${tableCount}" data-target="table_content_${tableCount}_hidden" style="min-height: 200px; max-height: 400px; overflow-y: auto; background-color: #fff;" placeholder="Paste your table here from Word - it will preserve formatting and structure"></div>
+          <div class="table-paste-area border rounded p-2" contenteditable="true" id="table_content_${tableCount}" data-target="table_content_${tableCount}_hidden" style="background-color: #fff; overflow: hidden;" placeholder="Paste your table here from Word - it will preserve formatting and structure"></div>
           <input type="hidden" id="table_content_${tableCount}_hidden" name="table_content_${tableCount}" />
           <small class="text-muted">Copy your table from Word and paste it here. The table structure will be preserved.</small>
         </div>
@@ -289,7 +289,7 @@
         </div>
         <div class="mb-3">
           <label for="figure_content_${figureCount}" class="form-label">Figure Content (Paste from Word)</label>
-          <div class="figure-paste-area border rounded p-2" contenteditable="true" id="figure_content_${figureCount}" data-target="figure_content_${figureCount}_hidden" style="min-height: 150px; max-height: 300px; overflow-y: auto; background-color: #fff;" placeholder="Paste your figure/image here from Word - images will be preserved"></div>
+          <div class="figure-paste-area border rounded p-2" contenteditable="true" id="figure_content_${figureCount}" data-target="figure_content_${figureCount}_hidden" style="background-color: #fff; overflow: hidden;" placeholder="Paste your figure/image here from Word - images will be preserved"></div>
           <input type="hidden" id="figure_content_${figureCount}_hidden" name="figure_content_${figureCount}" />
           <small class="text-muted">Copy your figure/image from Word and paste it here. Images will be preserved.</small>
         </div>
@@ -321,14 +321,29 @@
       });
     });
 
+    function autoResizeEditable(el) {
+      // Fit element height to its content
+      // - reset height so it can shrink
+      // - then set to scrollHeight
+      el.style.height = 'auto';
+      el.style.height = (el.scrollHeight || 0) + 'px';
+    }
+
     function setupPasteArea(elementId) {
       const element = document.getElementById(elementId);
       if (element) {
-        element.addEventListener('input', function () { updateHiddenInput(this); });
+        // Initial sizing
+        setTimeout(() => autoResizeEditable(element), 0);
+
+        element.addEventListener('input', function () {
+          updateHiddenInput(this);
+          autoResizeEditable(this);
+        });
         element.addEventListener('paste', (e) => {
           setTimeout(async () => {
             await normalizeImages(element);
             updateHiddenInput(element);
+            autoResizeEditable(element);
           }, 100);
         });
       }
@@ -479,6 +494,7 @@
               const element = document.getElementById(elementId);
               if (element && element.contentEditable === 'true') {
                 element.innerHTML = data['_contenteditables'][elementId];
+                autoResizeEditable(element);
                 const hiddenInputId = elementId + '_hidden';
                 const hiddenInput = document.getElementById(hiddenInputId);
                 if (hiddenInput && data[hiddenInputId]) hiddenInput.value = data[hiddenInputId];

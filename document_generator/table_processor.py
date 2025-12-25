@@ -14,6 +14,27 @@ import re
 from .style_handler import apply_hardcoded_style
 
 
+def _normalize_symbol_spacing_preserve_newlines(text: str) -> str:
+    """Normalize spacing around '=' and '±' without destroying newlines."""
+    # Apply per-line so we don't collapse \n into spaces.
+    lines = text.split('\n')
+    normalized_lines: List[str] = []
+    for line in lines:
+        # Remove all spaces around = and ±
+        line = re.sub(r'\s*=\s*', '=', line)
+        line = re.sub(r'\s*±\s*', '±', line)
+
+        # Add exactly one space around
+        line = re.sub(r'=', ' = ', line)
+        line = re.sub(r'±', ' ± ', line)
+
+        # Clean up only spaces/tabs (not newlines)
+        line = re.sub(r'[ \t]+', ' ', line)
+        normalized_lines.append(line.strip())
+
+    return '\n'.join(normalized_lines)
+
+
 def process_table_content(paragraph: Paragraph, html_content: str, doc: Optional[Document] = None, 
                           table_num: int = 1, caption: str = "") -> None:
     """
@@ -96,7 +117,7 @@ def _parse_html_table_to_grid(rows) -> tuple:
                 break
             
             # Get cell attributes
-            cell_text = cell.get_text().strip()
+            cell_text = cell.get_text(separator='\n').strip()
             rowspan = int(cell.get('rowspan', 1))
             colspan = int(cell.get('colspan', 1))
             
@@ -352,9 +373,9 @@ def _fill_and_style_table(word_table, table_data: list, merged_cells: set) -> No
                 cell_text = str(cell_value) if cell_value else ""
                 cell_text = cell_text.replace('(', '[').replace(')', ']')
                 # Apply percentage formatting and normalize symbol spacing
-                from .text_formatter import apply_percentage_formatting, normalize_symbol_spacing
+                from .text_formatter import apply_percentage_formatting
                 cell_text = apply_percentage_formatting(cell_text)
-                cell_text = normalize_symbol_spacing(cell_text)
+                cell_text = _normalize_symbol_spacing_preserve_newlines(cell_text)
                 cell.text = cell_text
                 
                 # Style the cell
@@ -381,8 +402,15 @@ def _fill_and_style_table(word_table, table_data: list, merged_cells: set) -> No
 
 def _fallback_to_text(paragraph: Paragraph, html_content: str) -> None:
     """Fallback: strip HTML and add as text."""
-    clean_text = re.sub(r'<[^>]+>', ' ', html_content)
-    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+    # Preserve explicit line breaks before stripping tags
+    clean_text = re.sub(r'(?i)<\s*br\s*/?>', '\n', html_content)
+    clean_text = re.sub(r'</\s*(div|p|tr)\s*>', '\n', clean_text, flags=re.I)
+    clean_text = re.sub(r'<[^>]+>', ' ', clean_text)
+
+    # Collapse spaces/tabs but keep newlines
+    clean_text = re.sub(r'[ \t\r\f\v]+', ' ', clean_text)
+    clean_text = re.sub(r'\n\s*\n+', '\n', clean_text)
+    clean_text = clean_text.strip()
     if clean_text:
         run = paragraph.add_run(clean_text)
         apply_hardcoded_style(run, font_size=10, spacing=0, scale=100)
