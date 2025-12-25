@@ -1,7 +1,24 @@
 import os
+import platform
+import subprocess
 from typing import Any, Dict
 
 import webview
+
+
+def _open_file_with_default_app(path: str) -> None:
+    """Open a file with the OS default application (best-effort)."""
+    try:
+        system = platform.system()
+        if system == 'Windows':
+            os.startfile(path)  # type: ignore[attr-defined]
+        elif system == 'Darwin':
+            subprocess.run(['open', path], check=False)
+        else:
+            subprocess.run(['xdg-open', path], check=False)
+    except Exception:
+        # Best-effort: do not fail document generation if opening fails.
+        pass
 
 
 class IJMAApi:
@@ -73,7 +90,10 @@ class IJMAApi:
                 output_path=save_path,
             )
 
-            return {"saved_path": os.path.abspath(generated_path)}
+            abs_path = os.path.abspath(generated_path)
+            _open_file_with_default_app(abs_path)
+
+            return {"saved_path": abs_path}
         except Exception as e:
             return {"error": str(e)}
 
