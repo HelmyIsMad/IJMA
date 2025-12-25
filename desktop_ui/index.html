@@ -391,12 +391,37 @@
       const conversions = imgNodes.map(async (img) => {
         try {
           const src = img.getAttribute('src') || '';
+          if (!src) return;
           if (src.startsWith('data:image/')) return;
+
+          // blob: URLs (Clipboard) => inline via fetch
           if (src.startsWith('blob:')) {
             const response = await fetch(src);
             const blob = await response.blob();
             const dataUrl = await blobToDataURL(blob);
             img.setAttribute('src', dataUrl);
+            return;
+          }
+
+          // http(s) => inline via fetch (best-effort)
+          if (src.startsWith('http://') || src.startsWith('https://')) {
+            const response = await fetch(src);
+            const blob = await response.blob();
+            const dataUrl = await blobToDataURL(blob);
+            img.setAttribute('src', dataUrl);
+            return;
+          }
+
+          // file:// (common when pasting from Word) => ask Python to read and convert
+          if (src.startsWith('file:')) {
+            if (window.pywebview && window.pywebview.api && window.pywebview.api.file_url_to_data_url) {
+              const res = await window.pywebview.api.file_url_to_data_url(src);
+              if (res && res.data_url) {
+                img.setAttribute('src', res.data_url);
+              } else {
+                console.warn('file_url_to_data_url failed', res);
+              }
+            }
             return;
           }
         } catch (err) {

@@ -26,6 +26,44 @@ class IJMAApi:
         # Lazily imported where needed to keep startup fast
         pass
 
+    def file_url_to_data_url(self, file_url: str) -> Dict[str, Any]:
+        """Convert a file:// URL (or plain path) into a data: URL (base64).
+
+        This is used because the embedded browser may not be able to fetch file:// URLs directly,
+        but the python docx pipeline expects <img src="data:image/...;base64,...">.
+        """
+        try:
+            import base64
+            import mimetypes
+            from urllib.parse import urlparse, unquote
+
+            raw = (file_url or '').strip()
+            if not raw:
+                return {"error": "empty file_url"}
+
+            path = raw
+            if raw.startswith('file:'):
+                parsed = urlparse(raw)
+                path = unquote(parsed.path or '')
+                # On Windows, urlparse('file:///C:/x') -> path '/C:/x'
+                if platform.system() == 'Windows' and path.startswith('/') and len(path) >= 3 and path[2] == ':':
+                    path = path[1:]
+
+            path = os.path.abspath(path)
+            if not os.path.exists(path):
+                return {"error": f"file not found: {path}"}
+
+            mime, _ = mimetypes.guess_type(path)
+            if not mime:
+                mime = 'application/octet-stream'
+
+            with open(path, 'rb') as f:
+                b64 = base64.b64encode(f.read()).decode('ascii')
+
+            return {"data_url": f"data:{mime};base64,{b64}"}
+        except Exception as e:
+            return {"error": str(e)}
+
     def generate_document_with_save_dialog(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Generate a document using the existing pipeline and save via native dialog.
 
