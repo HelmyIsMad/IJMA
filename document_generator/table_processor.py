@@ -27,16 +27,8 @@ def _cleanup_newlines(text: str) -> str:
     while lines and not lines[-1]:
         lines.pop()
 
-    # Collapse consecutive empty lines into a single empty line
-    cleaned: List[str] = []
-    prev_empty = False
-    for ln in lines:
-        is_empty = (ln == '')
-        if is_empty and prev_empty:
-            continue
-        cleaned.append(ln)
-        prev_empty = is_empty
-
+    # Remove all blank lines entirely (no empty paragraphs inside a cell)
+    cleaned: List[str] = [ln for ln in lines if ln]
     return '\n'.join(cleaned)
 
 
