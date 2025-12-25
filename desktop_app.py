@@ -109,7 +109,7 @@ def main() -> None:
         width=1200,
         height=900,
     )
-    webview.start(debug=True)
+    webview.start(debug=False)
 
 
 if __name__ == '__main__':
