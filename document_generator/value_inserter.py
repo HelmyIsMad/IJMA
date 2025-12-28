@@ -6,7 +6,7 @@ from typing import List, Optional
 from docx import Document
 from docx.text.paragraph import Paragraph
 from docx.oxml import OxmlElement
-from docx.shared import Pt
+from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 import re
 from .config import VALUES
@@ -230,9 +230,8 @@ def _insert_abstract(paragraph: Paragraph) -> None:
             paragraph_format = current_paragraph.paragraph_format
             paragraph_format.space_after = Pt(6)
             paragraph_format.space_before = Pt(0)
-            
-            # Add tab at the beginning
-            current_paragraph.add_run("\t")
+            paragraph_format.left_indent = Inches(0.5)
+            paragraph_format.first_line_indent = Inches(-0.5)
             
             # Add section header (bold)
             section_name = VALUES["{{abstract}}"][i]
@@ -330,6 +329,11 @@ def _insert_content_section(paragraph: Paragraph, variable: str) -> None:
                             new_p_element = OxmlElement('w:p')
                             current_p_element.addnext(new_p_element)
                             current_paragraph = Paragraph(new_p_element, paragraph._parent)
+                            if variable == "{{references}}":
+                                current_paragraph.paragraph_format.left_indent = Inches(0.5)
+                                current_paragraph.paragraph_format.first_line_indent = Inches(-0.5)
+                            else:
+                                current_paragraph.paragraph_format.first_line_indent = Inches(0.5)
                             current_p_element = new_p_element
 
 
