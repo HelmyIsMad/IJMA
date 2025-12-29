@@ -311,6 +311,11 @@ def _insert_content_section(paragraph: Paragraph, variable: str) -> None:
                     if para_text:  # Only process non-empty paragraphs
                         # Set justified alignment
                         current_paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                        if variable == "{{references}}":
+                            current_paragraph.paragraph_format.left_indent = Inches(0.5)
+                            current_paragraph.paragraph_format.first_line_indent = Inches(-0.5)
+                        else:
+                            current_paragraph.paragraph_format.first_line_indent = Inches(0.25)
                         
                         # Apply special formatting for intro, aim, methods (patients), and discussion
                         if variable in ["{{intro}}", "{{aim}}", "{{methods}}", "{{discussion}}"]:
@@ -329,11 +334,6 @@ def _insert_content_section(paragraph: Paragraph, variable: str) -> None:
                             new_p_element = OxmlElement('w:p')
                             current_p_element.addnext(new_p_element)
                             current_paragraph = Paragraph(new_p_element, paragraph._parent)
-                            if variable == "{{references}}":
-                                current_paragraph.paragraph_format.left_indent = Inches(0.5)
-                                current_paragraph.paragraph_format.first_line_indent = Inches(-0.5)
-                            else:
-                                current_paragraph.paragraph_format.first_line_indent = Inches(0.5)
                             current_p_element = new_p_element
 
 

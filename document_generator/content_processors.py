@@ -19,6 +19,13 @@ def process_authors_and_affiliations(authors: List[str], affiliations: List[str]
         (formatted_authors, formatted_affiliations)
         where each is a list of string chunks consumed by the value inserter.
     """
+
+    # transform from "Last, First" to "First Last"
+    for i in range(len(authors)):
+        names = authors[i].split(',')
+        names = list(names)
+        authors[i] = "".join(names[::-1])
+
     # Format affiliations
     for i in range(len(affiliations)):
         affiliations[i] = format_title(affiliations[i]) + '.'

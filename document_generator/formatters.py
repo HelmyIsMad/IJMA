@@ -51,7 +51,9 @@ def format_date(date: str) -> str:
     Returns:
         Formatted date string
     """
-    return date.strip()
+    date = date.strip()
+    date = '-'.join(date.split('-')[::-1])
+    return date
 
 
 def format_keywords(keywords: str) -> List[str]:
@@ -157,6 +159,7 @@ def format_abstract(abstract: str) -> List[str]:
         List alternating between section headers and content
     """
     new_abs = []
+    abstract = abstract.replace("\t", "")
     paragraphs = abstract.split("\n")
     
     # Filter out empty paragraphs properly
