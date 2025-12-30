@@ -174,6 +174,8 @@ class IJMAApi:
 
             return {"saved_path": abs_path}
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return {"error": str(e)}
 
 
