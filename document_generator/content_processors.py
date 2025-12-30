@@ -1,6 +1,7 @@
 """
 Content processors for tables, figures, authors, and affiliations.
 """
+import re
 from typing import List, Dict, Optional
 from .formatters import format_title
 
@@ -35,13 +36,13 @@ def process_authors_and_affiliations(authors: List[str], affiliations: List[str]
     for i in range(len(authors)):
         if ',' in authors[i]:
             parts = authors[i].split(',')
-            # Reverse and strip each part, then join with space
-            # e.g., "Helmy, Mohamed mahmoud" -> ["Mohamed mahmoud", "Helmy"] -> "Mohamed Mahmoud Helmy"
-            reversed_parts = [p.strip().title() for p in reversed(parts)]
+            # Reverse and strip each part, collapse multiple spaces, then join with space
+            # e.g., "Helmy,  Mohamed   mahmoud" -> ["Mohamed mahmoud", "Helmy"] -> "Mohamed Mahmoud Helmy"
+            reversed_parts = [re.sub(r'\s+', ' ', p.strip()).title() for p in reversed(parts)]
             authors[i] = " ".join(reversed_parts)
         else:
-            # No comma, just title case
-            authors[i] = authors[i].strip().title()
+            # No comma, just collapse spaces and title case
+            authors[i] = re.sub(r'\s+', ' ', authors[i].strip()).title()
 
     # Normalize and format affiliations using affiliation_fixer
     for i in range(len(affiliations)):
