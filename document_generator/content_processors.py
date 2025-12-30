@@ -31,11 +31,17 @@ def process_authors_and_affiliations(authors: List[str], affiliations: List[str]
         where each is a list of string chunks consumed by the value inserter.
     """
 
-    # transform from "Last, First" to "First Last"
+    # transform from "Last, First Middle" to "First Middle Last"
     for i in range(len(authors)):
-        names = authors[i].split(',')
-        names = list(names)
-        authors[i] = "".join(names[::-1])
+        if ',' in authors[i]:
+            parts = authors[i].split(',')
+            # Reverse and strip each part, then join with space
+            # e.g., "Helmy, Mohamed mahmoud" -> ["Mohamed mahmoud", "Helmy"] -> "Mohamed Mahmoud Helmy"
+            reversed_parts = [p.strip().title() for p in reversed(parts)]
+            authors[i] = " ".join(reversed_parts)
+        else:
+            # No comma, just title case
+            authors[i] = authors[i].strip().title()
 
     # Normalize and format affiliations using affiliation_fixer
     for i in range(len(affiliations)):
