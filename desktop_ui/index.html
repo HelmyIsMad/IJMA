@@ -709,6 +709,7 @@
       await Promise.all(contentAreas.map((el) => updateHiddenInput(el)));
 
       const payload = {
+        manuscript_code: (document.getElementById('manuscript_code')?.value || '').trim(),
         title: (document.getElementById('research_title')?.value || '').trim(),
         research_type: (document.getElementById('research_type')?.value || '').trim(),
         receive_date: (document.getElementById('receive_date')?.value || '').trim(),
