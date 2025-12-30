@@ -98,12 +98,7 @@ def _extract_authors_emails_and_affiliations(page):
     xpath_rel = '//table'
     tables = page.xpath(xpath_rel)
     for table in tables:
-        tbody = table.xpath('./tbody')
-        if not tbody:
-            tbody = [table]
-        else:
-            tbody = tbody[0:1]
-        
+        tbody = table.xpath('./tbody')[0]
         for tb in tbody:
             rows = tb.xpath('./tr')
             for row in rows:
