@@ -438,33 +438,34 @@ def normalize_affiliation(raw):
 
     return ", ".join(out) + "."
 
-# TESTS
-tests = [
-    "Psychology department, Damietta, alazhar",
-    "Dept of Comp Sci, Faculty of Engineering, Cairo Univ, Egypt",
-    "School of Medicine, Tanta, Egypt",
-    "Orthopedic surgery , faculty of medicine,al-azhar university damitta",
-    "Orthopedic Surgery Department, Damietta Faculty of Medicine, Al-Azhar University, Egypt.",
-    "Orthopedic depridement facality of medicine domitta Al azher",
-    "Kafr El Sheikh Ophthalmology Center",
-    "Faculty of Medicine, Al-Azhar university, Cairo",
-    "Department of Orthopedic Surgery, Damietta Faculty of Medicine, Al-Azhar University, Damietta, Egypt.",
-    "Department of Otorhinolaryngology, Damietta Faculty of Medicine, Al-Azhar University, Damietta, Egypt.",
-    "Department of Audiovestibular Medicine,Faculty of Medicine Mansoura University, Mansoura, Egypt",
-    "Deparmtent of Clinical Pathology, Damietta Faculty of Medicine, Al-Azhar University, Damietta, Egypt",
-    "lecturer of otorhinolaryngolgy,al azhar faculty of medicine new dameitta",
-    "Department of Pediatrics,Faculty of Medicine, Al-Azhar University, Damitta, Egypt",
-    "Pediatric Department, Al-Azhar Faculty of Medicine (Damietta)",
-    "Pediatric Department, Al-Azhar faculty of Medicine (Damietta)",
-    "Department of Radiology",
-    "Resident of Neurosurgery, Al-Azhar University Hospitals, Damietta, Egypt",
-    "Neurosurgery Department, Damietta Faculty of Medicine, Al-Azhar University, Egypt",
-    "Department of Neurosurgery Damietta Faculty of Medicine, Al-Azhar University"
-]
-
-for t in tests:
-    print("IN: ", t)
-    print("OUT:", normalize_affiliation(t))
-    print()
+# ----------------------------------------------------------------------------------------------------
+# TESTS (uncomment to run)
+# tests = [
+#     "Psychology department, Damietta, alazhar",
+#     "Dept of Comp Sci, Faculty of Engineering, Cairo Univ, Egypt",
+#     "School of Medicine, Tanta, Egypt",
+#     "Orthopedic surgery , faculty of medicine,al-azhar university damitta",
+#     "Orthopedic Surgery Department, Damietta Faculty of Medicine, Al-Azhar University, Egypt.",
+#     "Orthopedic depridement facality of medicine domitta Al azher",
+#     "Kafr El Sheikh Ophthalmology Center",
+#     "Faculty of Medicine, Al-Azhar university, Cairo",
+#     "Department of Orthopedic Surgery, Damietta Faculty of Medicine, Al-Azhar University, Damietta, Egypt.",
+#     "Department of Otorhinolaryngology, Damietta Faculty of Medicine, Al-Azhar University, Damietta, Egypt.",
+#     "Department of Audiovestibular Medicine,Faculty of Medicine Mansoura University, Mansoura, Egypt",
+#     "Deparmtent of Clinical Pathology, Damietta Faculty of Medicine, Al-Azhar University, Damietta, Egypt",
+#     "lecturer of otorhinolaryngolgy,al azhar faculty of medicine new dameitta",
+#     "Department of Pediatrics,Faculty of Medicine, Al-Azhar University, Damitta, Egypt",
+#     "Pediatric Department, Al-Azhar Faculty of Medicine (Damietta)",
+#     "Pediatric Department, Al-Azhar faculty of Medicine (Damietta)",
+#     "Department of Radiology",
+#     "Resident of Neurosurgery, Al-Azhar University Hospitals, Damietta, Egypt",
+#     "Neurosurgery Department, Damietta Faculty of Medicine, Al-Azhar University, Egypt",
+#     "Department of Neurosurgery Damietta Faculty of Medicine, Al-Azhar University"
+# ]
+#
+# for t in tests:
+#     print("IN: ", t)
+#     print("OUT:", normalize_affiliation(t))
+#     print()
 
 # ----------------------------------------------------------------------------------------------------
