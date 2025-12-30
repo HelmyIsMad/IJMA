@@ -26,6 +26,37 @@ class IJMAApi:
         # Lazily imported where needed to keep startup fast
         pass
 
+    def scrape_html_paste(self, html_text: str) -> Dict[str, Any]:
+        """Scrape IJMA submission HTML and return extracted fields.
+
+        Returns:
+            {
+                "code": str,
+                "title": str,
+                "receive_date": str,
+                "accept_date": str,
+                "authors": [str, ...],
+                "emails": [str, ...],
+                "affiliations": [str, ...]
+            }
+            or {"error": "..."}
+        """
+        try:
+            from HTML_scraper import scrape_html
+
+            code, title, receive_date, accept_date, authors, emails, affiliations = scrape_html(html_text)
+            return {
+                "code": code or "",
+                "title": title or "",
+                "receive_date": receive_date or "",
+                "accept_date": accept_date or "",
+                "authors": authors or [],
+                "emails": emails or [],
+                "affiliations": affiliations or [],
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
     def file_url_to_data_url(self, file_url: str) -> Dict[str, Any]:
         """Convert a file:// URL (or plain path) into a data: URL (base64).
 

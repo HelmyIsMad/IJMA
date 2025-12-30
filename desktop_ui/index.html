@@ -36,6 +36,23 @@
         <div id="status-area"></div>
 
         <form id="ijma-form" enctype="multipart/form-data">
+          <!-- HTML Import Section -->
+          <div class="form-section">
+            <h3 class="section-title">Import from HTML (Optional)</h3>
+            <div class="mb-3">
+              <label for="html_paste" class="form-label">Paste IJMA Submission HTML</label>
+              <textarea class="form-control" id="html_paste" rows="6" placeholder="Paste the HTML from the IJMA submission page here, then click Parse HTML..."></textarea>
+              <small class="text-muted">This will auto-fill title, dates, authors, and affiliations.</small>
+            </div>
+            <button type="button" class="btn btn-success" onclick="parseHTMLPaste()">Parse HTML</button>
+
+            <div id="corresponding-author-selection" style="display: none; margin-top: 20px;">
+              <h6>Select Corresponding Author:</h6>
+              <div id="corresponding-author-radios"></div>
+              <button type="button" class="btn btn-primary btn-sm mt-2" onclick="applyScrapedData()">Apply to Form</button>
+            </div>
+          </div>
+
           <!-- Basic Information Section -->
           <div class="form-section">
             <h3 class="section-title">Basic Information</h3>
@@ -549,6 +566,135 @@
     }, true);
 
     setInterval(saveFormData, 2000);
+
+    // HTML scraper integration
+    let scrapedData = null;
+
+    async function parseHTMLPaste() {
+      const htmlText = (document.getElementById('html_paste')?.value || '').trim();
+      if (!htmlText) {
+        setStatus('error', 'Please paste HTML before parsing.');
+        return;
+      }
+
+      if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.scrape_html_paste) {
+        setStatus('error', 'Scraper API not available. Run via desktop launcher.');
+        return;
+      }
+
+      setStatus('info', 'Parsing HTML...');
+      try {
+        const result = await window.pywebview.api.scrape_html_paste(htmlText);
+        if (result.error) {
+          setStatus('error', 'Scraper error: ' + result.error);
+          return;
+        }
+
+        scrapedData = result;
+        console.log('scrapedData', scrapedData);
+
+        // Show corresponding author selection if there are multiple authors
+        if (scrapedData.authors && scrapedData.authors.length > 1) {
+          showCorrespondingAuthorSelection();
+        } else {
+          // Single author or no authors: apply directly
+          applyScrapedData();
+        }
+      } catch (e) {
+        setStatus('error', 'Parse failed: ' + (e?.message || String(e)));
+      }
+    }
+
+    function showCorrespondingAuthorSelection() {
+      const container = document.getElementById('corresponding-author-radios');
+      container.innerHTML = '';
+
+      scrapedData.authors.forEach((author, idx) => {
+        const email = scrapedData.emails[idx] || '';
+        const label = document.createElement('label');
+        label.className = 'd-block mb-2';
+        label.innerHTML = `
+          <input type="radio" name="corresponding_author_idx" value="${idx}" ${idx === 0 ? 'checked' : ''}>
+          ${author} ${email ? `(${email})` : ''}
+        `;
+        container.appendChild(label);
+      });
+
+      document.getElementById('corresponding-author-selection').style.display = 'block';
+    }
+
+    function applyScrapedData() {
+      if (!scrapedData) return;
+
+      // Find which author is selected as corresponding
+      const radios = document.querySelectorAll('input[name="corresponding_author_idx"]');
+      let correspondingIdx = 0;
+      for (let i = 0; i < radios.length; i++) {
+        if (radios[i].checked) {
+          correspondingIdx = parseInt(radios[i].value, 10);
+          break;
+        }
+      }
+
+      // Reorder so corresponding author is first
+      const authors = [...(scrapedData.authors || [])];
+      const emails = [...(scrapedData.emails || [])];
+      const affiliations = [...(scrapedData.affiliations || [])];
+
+      if (correspondingIdx !== 0 && correspondingIdx < authors.length) {
+        [authors[0], authors[correspondingIdx]] = [authors[correspondingIdx], authors[0]];
+        [emails[0], emails[correspondingIdx]] = [emails[correspondingIdx], emails[0]];
+        [affiliations[0], affiliations[correspondingIdx]] = [affiliations[correspondingIdx], affiliations[0]];
+      }
+
+      // Auto-populate fields
+      document.getElementById('research_title').value = scrapedData.title || '';
+      document.getElementById('receive_date').value = scrapedData.receive_date || '';
+      document.getElementById('accept_date').value = scrapedData.accept_date || '';
+
+      // Clear existing authors (except first one) and populate
+      const authorsContainer = document.getElementById('authors-container');
+      authorsContainer.innerHTML = '';
+      authorCount = 0;
+
+      authors.forEach((author, idx) => {
+        authorCount++;
+        const div = document.createElement('div');
+        div.className = 'author-group mb-4 border rounded p-3';
+        div.style.backgroundColor = '#fff';
+
+        const removeBtn = (idx === 0) ? '' : `<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeAuthor(this)">Remove</button>`;
+
+        div.innerHTML = `
+          <h6 class="text-primary d-flex justify-content-between align-items-center">
+            Author ${authorCount}
+            ${removeBtn}
+          </h6>
+          <div class="row">
+            <div class="col-md-4">
+              <label for="author_name_${authorCount}" class="form-label">Author Name *</label>
+              <input type="text" class="form-control" id="author_name_${authorCount}" name="author_name_${authorCount}" value="${author}" ${idx === 0 ? 'required' : ''}>
+            </div>
+            <div class="col-md-4">
+              <label for="author_affiliation_${authorCount}" class="form-label">Affiliation</label>
+              <textarea class="form-control" id="author_affiliation_${authorCount}" name="author_affiliation_${authorCount}" rows="2">${affiliations[idx] || ''}</textarea>
+            </div>
+            <div class="col-md-4">
+              <label for="author_email_${authorCount}" class="form-label">Email ${idx === 0 ? '(Corresponding Author)' : ''}</label>
+              <input type="email" class="form-control" id="author_email_${authorCount}" name="author_email_${authorCount}" value="${emails[idx] || ''}">
+            </div>
+          </div>
+        `;
+        authorsContainer.appendChild(div);
+      });
+
+      // Hide the scraper UI
+      document.getElementById('corresponding-author-selection').style.display = 'none';
+      document.getElementById('html_paste').value = '';
+
+      setStatus('success', 'Form populated from HTML. Review and edit as needed.');
+      saveFormData();
+    }
 
     async function collectPayload() {
       // Ensure hidden inputs are up-to-date (including async image inlining)
