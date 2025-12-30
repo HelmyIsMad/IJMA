@@ -4,6 +4,17 @@ Content processors for tables, figures, authors, and affiliations.
 from typing import List, Dict, Optional
 from .formatters import format_title
 
+# Import affiliation normalizer
+try:
+    import sys
+    import os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+    from affiliation.affiliation_fixer import normalize_affiliation
+except ImportError:
+    # Fallback if affiliation_fixer not available
+    def normalize_affiliation(raw: str) -> str:
+        return raw.strip() + "."
+
 
 def process_authors_and_affiliations(authors: List[str], affiliations: List[str]) -> tuple:
     """Process authors and affiliations.
@@ -26,9 +37,12 @@ def process_authors_and_affiliations(authors: List[str], affiliations: List[str]
         names = list(names)
         authors[i] = "".join(names[::-1])
 
-    # Format affiliations
+    # Normalize and format affiliations using affiliation_fixer
     for i in range(len(affiliations)):
-        affiliations[i] = format_title(affiliations[i]) + '.'
+        raw_aff = affiliations[i] or ''
+        # Normalize using the fixer (already adds trailing period)
+        normalized = normalize_affiliation(raw_aff)
+        affiliations[i] = normalized
 
     new_authors: List[str] = []
     new_affiliation: List[str] = []
