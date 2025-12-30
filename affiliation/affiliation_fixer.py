@@ -2,14 +2,21 @@
 # Rule-based first, NER only for ORG fallback, with strict filtering
 # 100% free / open-source
 
-from transformers import pipeline
 import re
 
-ner = pipeline(
-    "ner",
-    model="dslim/bert-base-NER",
-    aggregation_strategy="simple"
-)
+# Lazy-load NER model only when needed (saves ~8 seconds on import)
+_ner_model = None
+
+def _get_ner():
+    global _ner_model
+    if _ner_model is None:
+        from transformers import pipeline
+        _ner_model = pipeline(
+            "ner",
+            model="dslim/bert-base-NER",
+            aggregation_strategy="simple"
+        )
+    return _ner_model
 
 COUNTRIES = {"egypt": "Egypt"}
 
@@ -362,6 +369,7 @@ def normalize_affiliation(raw):
 
     # NER fallback ONLY if university still missing
     if not university:
+        ner = _get_ner()
         for e in ner(raw):
             if e["entity_group"] == "ORG":
                 cand = e["word"].strip().title()
