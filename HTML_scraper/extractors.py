@@ -94,24 +94,29 @@ def _extract_authors_emails_and_affiliations(page):
     emails = []
     affiliations = []
 
-    # Try relative: find all tables, look for one with 6+ columns per row
+    # Try relative: process only the first table
     xpath_rel = '//table'
     tables = page.xpath(xpath_rel)
-    for table in tables:
-        tbody = table.xpath('./tbody')[0]
-        for tb in tbody:
-            rows = tb.xpath('./tr')
-            for row in rows:
-                cells = row.xpath('./td')
-                if len(cells) >= 6:
-                    author = (cells[0].text_content() or '').strip()
-                    email = (cells[1].text_content() or '').strip()
-                    affiliation = (cells[5].text_content() or '').strip()
+    if tables:
+        table = tables[0]
+        tbody_elements = table.xpath('./tbody')
+        if tbody_elements:
+            tbody = tbody_elements[0]
+        else:
+            tbody = table
+        
+        rows = tbody.xpath('./tr')
+        for row in rows:
+            cells = row.xpath('./td')
+            if len(cells) >= 6:
+                author = (cells[0].text_content() or '').strip()
+                email = (cells[1].text_content() or '').strip()
+                affiliation = (cells[5].text_content() or '').strip()
 
-                    if author:
-                        authors.append(author)
-                        emails.append(email)
-                        affiliations.append(affiliation)
+                if author:
+                    authors.append(author)
+                    emails.append(email)
+                    affiliations.append(affiliation)
     
     if authors:
         return authors, emails, affiliations
