@@ -111,13 +111,22 @@ class IJMAApi:
             if not title:
                 return {"error": "title is required"}
 
+            # Use manuscript code as filename if provided, else generic name
+            manuscript_code = (payload.get('manuscript_code') or '').strip()
+            if manuscript_code:
+                # Sanitize code for filename (remove invalid chars)
+                import re
+                safe_code = re.sub(r'[<>:"/\\|?*]', '_', manuscript_code)
+                default_name = f"{safe_code}.docx"
+            else:
+                default_name = "IJMA_document.docx"
+
             # Ask user where to save.
             # NOTE: webview's file dialog returns a list of selected paths or None.
             window = webview.windows[0] if webview.windows else None
             if window is None:
                 return {"error": "No active window for file dialog"}
 
-            default_name = "IJMA_document.docx"
             save_paths = window.create_file_dialog(
                 webview.FileDialog.SAVE,
                 save_filename=default_name,

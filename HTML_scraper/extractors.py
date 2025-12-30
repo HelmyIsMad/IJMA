@@ -27,6 +27,14 @@ def _extract_title(page) -> str:
         return (elements[0].text_content() or '').strip()
     return ""
 
+def _extract_research_type(page) -> str:
+    """Extract research type."""
+    xpath = '/html/body/div[4]/div/div[4]/div[7]/fieldset/div/div[2]/div/div[1]/div/table/tbody/tr[6]/td[2]'
+    elements = page.xpath(xpath)
+    if elements:
+        return (elements[0].text_content() or '').strip()
+    return ""
+
 
 def _extract_receive_date(page) -> str:
     """Extract receive date (strip trailing timestamp if present)."""
@@ -48,6 +56,29 @@ def _extract_receive_date(page) -> str:
         if len(val) > 9 and val[-9] == ' ' and ':' in val[-8:]:
             val = val[:-9]
         return val
+    
+    return ""
+
+
+def _extract_research_type(page) -> str:
+    """Extract research type (e.g., Original Article, Case Report, etc.)."""
+    # Try relative: look for row with "Type" or "Research Type" label
+    # Common pattern: a table row where first cell contains label, second contains value
+    xpath_rel = '//table//tr'
+    rows = page.xpath(xpath_rel)
+    for row in rows:
+        cells = row.xpath('./td')
+        if len(cells) >= 2:
+            label = (cells[0].text_content() or '').strip().lower()
+            if 'type' in label or 'research type' in label or 'article type' in label:
+                return (cells[1].text_content() or '').strip()
+    
+    # Fallback: try specific row index if known
+    # (adjust tr index if you know which row in the IJMA HTML contains research type)
+    xpath_abs = '//fieldset//table//tr[3]/td[2]/span'
+    elements = page.xpath(xpath_abs)
+    if elements:
+        return (elements[0].text_content() or '').strip()
     
     return ""
 
