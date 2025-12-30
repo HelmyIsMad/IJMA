@@ -15,21 +15,15 @@ from .style_handler import apply_hardcoded_style
 
 
 def _cleanup_newlines(text: str) -> str:
-    """Normalize newlines inside table cells.
+    """Remove ALL newline characters from table cells.
 
-    Keeps intentional line breaks but removes extra blank lines and trailing/leading newlines.
+    Replaces newlines with spaces to ensure no line breaks inside cells.
     """
-    lines = [ln.strip() for ln in text.split('\n')]
-
-    # Remove leading/trailing empty lines
-    while lines and not lines[0]:
-        lines.pop(0)
-    while lines and not lines[-1]:
-        lines.pop()
-
-    # Remove all blank lines entirely (no empty paragraphs inside a cell)
-    cleaned: List[str] = [ln for ln in lines if ln]
-    return '\n'.join(cleaned)
+    # Replace all newline variations with space
+    text = text.replace('\r\n', ' ').replace('\n', ' ').replace('\r', ' ')
+    # Collapse multiple spaces into one
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
 
 
 def _normalize_symbol_spacing_preserve_newlines(text: str) -> str:
@@ -408,8 +402,14 @@ def _fill_and_style_table(word_table, table_data: list, merged_cells: set) -> No
                     for run in paragraph_in_cell.runs:
                         apply_hardcoded_style(run, font_size=10, spacing=0, scale=100)
                 
-                # Make header row bold
+                # Make header row (row 0) bold
                 if row_idx == 0:
+                    for paragraph_in_cell in cell.paragraphs:
+                        for run in paragraph_in_cell.runs:
+                            apply_hardcoded_style(run, font_size=10, bold=True, spacing=0, scale=100)
+                
+                # Make first column (col 0) bold in all rows
+                if col_idx == 0:
                     for paragraph_in_cell in cell.paragraphs:
                         for run in paragraph_in_cell.runs:
                             apply_hardcoded_style(run, font_size=10, bold=True, spacing=0, scale=100)
