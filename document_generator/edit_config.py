@@ -56,8 +56,10 @@ def fill_values(
     """
     # Format basic information
     formatted_title = format_title(title)
-    authors_short = format_authors_short(authors)
+    # Process authors first (reorders "Last, First" -> "First Last" in-place)
     formatted_authors, formatted_affiliations = process_authors_and_affiliations(authors, affiliation)
+    # Now generate short names from the reordered authors
+    authors_short = format_authors_short(authors)
     
     # Fill header and metadata
     VALUES["{{research_title}}"][0] = formatted_title
