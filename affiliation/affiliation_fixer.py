@@ -18,6 +18,44 @@ def _get_ner():
         )
     return _ner_model
 
+# Words that should not be capitalized (except when first word or after punctuation)
+DONT_CAPITALIZE = {
+    "of", "and", "the", "a", "an", "in", "on", "at", "to", "for", "with", "by", "from"
+}
+
+def smart_title_final(text: str) -> str:
+    """Apply smart title case to final output: lowercase articles/prepositions except after punctuation."""
+    if not text:
+        return text
+    
+    # Split by comma and period to preserve sentence/clause boundaries
+    parts = []
+    for part in text.replace(', ', '|,|').replace('.', '|.|').split('|'):
+        if part in [',', '.', '']:
+            parts.append(part)
+            continue
+        
+        words = part.strip().split()
+        result = []
+        for i, word in enumerate(words):
+            word_lower = word.lower()
+            # Capitalize first word of each clause/sentence, otherwise check DONT_CAPITALIZE
+            if i == 0 or word_lower not in DONT_CAPITALIZE:
+                result.append(word_lower.capitalize())
+            else:
+                result.append(word_lower)
+        parts.append(' '.join(result))
+    
+    # Rejoin with proper spacing
+    output = ''
+    for i, part in enumerate(parts):
+        output += part
+        # Add space after comma
+        if part == ',' and i + 1 < len(parts) and parts[i + 1] not in [',', '.', '']:
+            output += ' '
+    
+    return output
+
 COUNTRIES = {"egypt": "Egypt"}
 
 # City to Country mapping
@@ -444,7 +482,10 @@ def normalize_affiliation(raw):
     if country:
         out.append(country)
 
-    return ", ".join(out) + "."
+    result = ", ".join(out) + "."
+    
+    # Apply smart title case to final output
+    return smart_title_final(result)
 
 # ----------------------------------------------------------------------------------------------------
 # TESTS (uncomment to run)
