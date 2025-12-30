@@ -44,10 +44,11 @@ class IJMAApi:
         try:
             from HTML_scraper import scrape_html
 
-            code, title, receive_date, accept_date, authors, emails, affiliations = scrape_html(html_text)
+            code, title, research_type, receive_date, accept_date, authors, emails, affiliations = scrape_html(html_text)
             return {
                 "code": code or "",
                 "title": title or "",
+                "research_type": research_type or "",
                 "receive_date": receive_date or "",
                 "accept_date": accept_date or "",
                 "authors": authors or [],
@@ -187,7 +188,7 @@ def main() -> None:
         width=1200,
         height=900,
     )
-    webview.start(debug=False)
+    webview.start(debug=True)
 
 
 if __name__ == '__main__':

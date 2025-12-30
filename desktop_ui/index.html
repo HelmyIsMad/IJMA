@@ -44,7 +44,7 @@
               <textarea class="form-control" id="html_paste" rows="6" placeholder="Paste the HTML from the IJMA submission page here, then click Parse HTML..."></textarea>
               <small class="text-muted">This will auto-fill title, dates, authors, and affiliations.</small>
             </div>
-            <button type="button" class="btn btn-success" onclick="parseHTMLPaste()">Parse HTML</button>
+            <button type="button" class="btn btn-success" onclick="parseHTMLPaste(); return false;">Parse HTML</button>
 
             <div id="corresponding-author-selection" style="display: none; margin-top: 20px;">
               <h6>Select Corresponding Author:</h6>
@@ -626,7 +626,12 @@
         container.appendChild(label);
       });
 
-      document.getElementById('corresponding-author-selection').style.display = 'block';
+      const selectionDiv = document.getElementById('corresponding-author-selection');
+      selectionDiv.style.display = 'block';
+      
+      // Prevent auto-scroll by keeping current scroll position
+      const scrollY = window.scrollY;
+      setTimeout(() => window.scrollTo(0, scrollY), 0);
     }
 
     function applyScrapedData() {
@@ -784,6 +789,7 @@
           return;
         }
 
+        console.log('Payload being sent:', payload);
         setStatus('info', 'Generating document...');
         const result = await window.pywebview.api.generate_document_with_save_dialog(payload);
         console.log('generate_document_with_save_dialog result:', result);
