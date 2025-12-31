@@ -1,10 +1,7 @@
 import os
 import platform
 import subprocess
-from typing import Any, Dict
-
 import webview
-
 
 def _open_file_with_default_app(path: str) -> None:
     """Open a file with the OS default application (best-effort)."""
@@ -26,13 +23,14 @@ class IJMAApi:
         # Lazily imported where needed to keep startup fast
         pass
 
-    def scrape_html_paste(self, html_text: str) -> Dict[str, Any]:
+    def scrape_html_paste(self, html_text: str) -> dict[str, str]:
         """Scrape IJMA submission HTML and return extracted fields.
 
         Returns:
             {
                 "code": str,
                 "title": str,
+                "research_type": str,
                 "receive_date": str,
                 "accept_date": str,
                 "authors": [str, ...],
@@ -42,23 +40,23 @@ class IJMAApi:
             or {"error": "..."}
         """
         try:
-            from HTML_scraper import scrape_html
+            from html_scraper import scrape_html
 
             code, title, research_type, receive_date, accept_date, authors, emails, affiliations = scrape_html(html_text)
             return {
-                "code": code or "",
-                "title": title or "",
-                "research_type": research_type or "",
-                "receive_date": receive_date or "",
-                "accept_date": accept_date or "",
-                "authors": authors or [],
-                "emails": emails or [],
-                "affiliations": affiliations or [],
+                "code": code,
+                "title": title,
+                "research_type": research_type,
+                "receive_date": receive_date,
+                "accept_date": accept_date,
+                "authors": authors,
+                "emails": emails,
+                "affiliations": affiliations,
             }
         except Exception as e:
             return {"error": str(e)}
 
-    def file_url_to_data_url(self, file_url: str) -> Dict[str, Any]:
+    def file_url_to_data_url(self, file_url: str) -> dict[str, str]:
         """Convert a file:// URL (or plain path) into a data: URL (base64).
 
         This is used because the embedded browser may not be able to fetch file:// URLs directly,
@@ -96,7 +94,7 @@ class IJMAApi:
         except Exception as e:
             return {"error": str(e)}
 
-    def generate_document_with_save_dialog(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_document_with_save_dialog(self, payload: dict[str, str]) -> dict[str, str]:
         """Generate a document using the existing pipeline and save via native dialog.
 
         Args:

@@ -1,22 +1,8 @@
-# CLEAN + DEDUPLICATED + NO-SPURIOUS-FALLBACK VERSION
-# Rule-based first, NER only for ORG fallback, with strict filtering
-# 100% free / open-source
+# CLEAN + DEDUPLICATED VERSION
+# 100% rule-based affiliation normalization
+# No ML models required - fast and deterministic
 
 import re
-
-# Lazy-load NER model only when needed (saves ~8 seconds on import)
-_ner_model = None
-
-def _get_ner():
-    global _ner_model
-    if _ner_model is None:
-        from transformers import pipeline
-        _ner_model = pipeline(
-            "ner",
-            model="dslim/bert-base-NER",
-            aggregation_strategy="simple"
-        )
-    return _ner_model
 
 # Words that should not be capitalized (except when first word or after punctuation)
 DONT_CAPITALIZE = {
@@ -405,31 +391,8 @@ def normalize_affiliation(raw):
     if university:
         used_lower.add(university.lower())
 
-    # NER fallback ONLY if university still missing
-    if not university:
-        ner = _get_ner()
-        for e in ner(raw):
-            if e["entity_group"] == "ORG":
-                cand = e["word"].strip().title()
-                cand_lower = cand.lower()
-                
-                # Skip if already extracted or contains dept/faculty words
-                if cand_lower in used_lower:
-                    continue
-                if any(w in cand_lower for w in DEPT_WORDS + FACULTY_WORDS):
-                    continue
-                
-                # Check if it's a substring of already used items (or vice versa)
-                is_duplicate = False
-                for used_item in used_lower:
-                    if cand_lower in used_item or used_item in cand_lower:
-                        is_duplicate = True
-                        break
-                
-                if not is_duplicate:
-                    university = cand
-                    used_lower.add(cand_lower)
-                    break
+    # University extraction relies on rule-based methods only
+    # No NER fallback needed - the rule-based extraction is comprehensive
 
     # Build used set for city extraction (case-insensitive comparison)
     used_parts = set()

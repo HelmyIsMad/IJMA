@@ -10,7 +10,7 @@ try:
     import sys
     import os
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-    from affiliation.affiliation_fixer import normalize_affiliation
+    from affiliation_processor.affiliation_fixer import normalize_affiliation
 except ImportError:
     # Fallback if affiliation_fixer not available
     def normalize_affiliation(raw: str) -> str:
@@ -94,7 +94,7 @@ def process_authors_and_affiliations(authors: List[str], affiliations: List[str]
         new_authors.append(author)
         if suffix:
             new_authors.append(suffix)
-        new_authors.append(';')
+        new_authors.append('; ')
 
     # If single unique affiliation: include the affiliation once, without a leading number
     if single_unique_affiliation and unique_affiliations:
