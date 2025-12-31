@@ -1,92 +1,77 @@
 """Extractors for IJMA submission HTML using XPath (lxml)."""
+import json
+import os
 from lxml import html as lxml_html
+
+# Load XPath mappings from xpaths.json
+_xpaths = None
+
+def _get_xpaths():
+    global _xpaths
+    if _xpaths is None:
+        json_path = os.path.join(os.path.dirname(__file__), 'xpaths.json')
+        with open(json_path, 'r', encoding='utf-8') as f:
+            _xpaths = json.load(f)
+    return _xpaths
 
 
 def _extract_code(page) -> str:
     """Extract submission code."""
-    # Try relative XPath first (more flexible)
-    xpath_rel = '//fieldset//table//tr[1]/td[2]/span'
-    elements = page.xpath(xpath_rel)
-    if elements:
-        return (elements[0].text_content() or '').strip()
-    
-    # Fallback: absolute XPath
-    xpath_abs = '/html/body/div[4]/div/div[4]/div[7]/fieldset/div/div[2]/div/div[1]/div/table/tbody/tr[1]/td[2]/span'
-    elements = page.xpath(xpath_abs)
-    if elements:
-        return (elements[0].text_content() or '').strip()
-    
+    xpaths = _get_xpaths()
+    xpath = xpaths.get('code', '')
+    if xpath:
+        elements = page.xpath(xpath)
+        if elements:
+            return (elements[0].text_content() or '').strip()
     return ""
 
 
 def _extract_title(page) -> str:
     """Extract manuscript title."""
-    xpath = '//*[@id="td_manu_ttl"]'
-    elements = page.xpath(xpath)
-    if elements:
-        return (elements[0].text_content() or '').strip()
+    xpaths = _get_xpaths()
+    xpath = xpaths.get('title', '')
+    if xpath:
+        elements = page.xpath(xpath)
+        if elements:
+            return (elements[0].text_content() or '').strip()
     return ""
 
 def _extract_research_type(page) -> str:
     """Extract research type."""
-    # Try relative XPath first (more flexible)
-    xpath_rel = '//fieldset//table//tr[6]/td[2]'
-    elements = page.xpath(xpath_rel)
-    if elements:
-        return (elements[0].text_content() or '').strip()
-    
-    # Fallback: absolute XPath
-    xpath_abs = '/html/body/div[4]/div/div[4]/div[7]/fieldset/div/div[2]/div/div[1]/div/table/tbody/tr[6]/td[2]'
-    elements = page.xpath(xpath_abs)
-    if elements:
-        return (elements[0].text_content() or '').strip()
-    
+    xpaths = _get_xpaths()
+    xpath = xpaths.get('research_type', '')
+    if xpath:
+        elements = page.xpath(xpath)
+        if elements:
+            return (elements[0].text_content() or '').strip()
     return ""
-
 
 def _extract_receive_date(page) -> str:
     """Extract receive date (strip trailing timestamp if present)."""
-    # Try relative: look for row 9 in the first fieldset table
-    xpath_rel = '//fieldset//table//tr[9]/td[2]/span'
-    elements = page.xpath(xpath_rel)
-    if elements:
-        val = (elements[0].text_content() or '').strip()
-        # Remove trailing timestamp (e.g., " 12:34:56")
-        if len(val) > 9 and val[-9] == ' ' and ':' in val[-8:]:
-            val = val[:-9]
-        return val
-    
-    # Fallback: absolute
-    xpath_abs = '/html/body/div[4]/div/div[4]/div[7]/fieldset/div/div[2]/div/div[1]/div/table/tbody/tr[9]/td[2]/span'
-    elements = page.xpath(xpath_abs)
-    if elements:
-        val = (elements[0].text_content() or '').strip()
-        if len(val) > 9 and val[-9] == ' ' and ':' in val[-8:]:
-            val = val[:-9]
-        return val
-    
+    xpaths = _get_xpaths()
+    xpath = xpaths.get('receive_date', '')
+    if xpath:
+        elements = page.xpath(xpath)
+        if elements:
+            val = (elements[0].text_content() or '').strip()
+            # Remove trailing timestamp (e.g., " 12:34:56")
+            if len(val) > 9 and val[-9] == ' ' and ':' in val[-8:]:
+                val = val[:-9]
+            return val
     return ""
-
 
 def _extract_acceptance_date(page) -> str:
     """Extract acceptance date."""
-    # Try relative
-    xpath_rel = '//fieldset//table//tr[11]/td[2]/span'
-    elements = page.xpath(xpath_rel)
-    if elements:
-        return (elements[0].text_content() or '').strip()
-    
-    # Fallback
-    xpath_abs = '/html/body/div[4]/div/div[4]/div[7]/fieldset/div/div[2]/div/div[1]/div/table/tbody/tr[11]/td[2]/span'
-    elements = page.xpath(xpath_abs)
-    if elements:
-        return (elements[0].text_content() or '').strip()
-    
+    xpaths = _get_xpaths()
+    xpath = xpaths.get('acceptance_date', '')
+    if xpath:
+        elements = page.xpath(xpath)
+        if elements:
+            return (elements[0].text_content() or '').strip()
     return ""
 
-
 def _extract_authors_emails_and_affiliations(page):
-    """Extract authors, emails, affiliations from a table.
+    """Extract authors, emails, affiliations using XPath from xpaths.json.
 
     Returns (authors, emails, affiliations).
     """
@@ -94,49 +79,28 @@ def _extract_authors_emails_and_affiliations(page):
     emails = []
     affiliations = []
 
-    # Try relative: process only the first table
-    xpath_rel = '//table'
-    tables = page.xpath(xpath_rel)
-    if tables:
-        table = tables[0]
-        tbody_elements = table.xpath('./tbody')
-        if tbody_elements:
-            tbody = tbody_elements[0]
-        else:
-            tbody = table
-        
-        rows = tbody.xpath('./tr')
-        for row in rows:
-            cells = row.xpath('./td')
-            if len(cells) >= 6:
-                author = (cells[0].text_content() or '').strip()
-                email = (cells[1].text_content() or '').strip()
-                affiliation = (cells[5].text_content() or '').strip()
+    xpaths = _get_xpaths()
+    author_xpath = xpaths.get('authors', '')
+    email_xpath = xpaths.get('emails', '')
+    affiliation_xpath = xpaths.get('affiliations', '')
 
-                if author:
-                    authors.append(author)
-                    emails.append(email)
-                    affiliations.append(affiliation)
-    
-    if authors:
+    if not (author_xpath and email_xpath and affiliation_xpath):
         return authors, emails, affiliations
 
-    # Fallback: absolute XPath
-    xpath_abs = '/html/body/div[4]/div/div[4]/div[7]/fieldset/div/div[2]/div/div[2]/div/div/div/div/table/tbody'
-    tbody_elements = page.xpath(xpath_abs)
-    if tbody_elements:
-        tbody = tbody_elements[0]
-        rows = tbody.xpath('./tr')
-        for row in rows:
-            cells = row.xpath('./td')
-            if len(cells) >= 6:
-                author = (cells[0].text_content() or '').strip()
-                email = (cells[1].text_content() or '').strip()
-                affiliation = (cells[5].text_content() or '').strip()
+    # Extract all matching elements
+    author_elements = page.xpath(author_xpath)
+    email_elements = page.xpath(email_xpath)
+    affiliation_elements = page.xpath(affiliation_xpath)
 
-                if author:
-                    authors.append(author)
-                    emails.append(email)
-                    affiliations.append(affiliation)
+    # Zip them together (assume same count)
+    for author_el, email_el, aff_el in zip(author_elements, email_elements, affiliation_elements):
+        author = (author_el.text_content() or '').strip()
+        email = (email_el.text_content() or '').strip()
+        affiliation = (aff_el.text_content() or '').strip()
+
+        if author:
+            authors.append(author)
+            emails.append(email)
+            affiliations.append(affiliation)
 
     return authors, emails, affiliations
