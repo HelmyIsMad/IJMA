@@ -36,38 +36,62 @@ def _extract_title(page) -> str:
             return (elements[0].text_content() or '').strip()
     return ""
 
+def _has_running_title_row(page) -> bool:
+    """Check if the page has an optional 'running title' row at tr[4]."""
+    # Check if row 4 contains "running title" text (case insensitive)
+    row4_elements = page.xpath('//table[1]//tr[4]/td[1]')
+    if row4_elements:
+        text = (row4_elements[0].text_content() or '').strip().lower()
+        return 'running' in text and 'title' in text
+    return False
+
 def _extract_research_type(page) -> str:
-    """Extract research type."""
+    """Extract research type (adjusts for optional running title row)."""
     xpaths = _get_xpaths()
-    xpath = xpaths.get('research_type', '')
-    if xpath:
-        elements = page.xpath(xpath)
-        if elements:
-            return (elements[0].text_content() or '').strip()
+    base_xpath = xpaths.get('research_type', '')
+    if not base_xpath:
+        return ""
+    
+    # If running title exists, research type shifts from tr[4] to tr[5]
+    xpath = base_xpath.replace('/tr[4]/', '/tr[5]/') if _has_running_title_row(page) else base_xpath
+    
+    elements = page.xpath(xpath)
+    if elements:
+        return (elements[0].text_content() or '').strip()
     return ""
 
 def _extract_receive_date(page) -> str:
-    """Extract receive date (strip trailing timestamp if present)."""
+    """Extract receive date (strip trailing timestamp, adjusts for optional running title row)."""
     xpaths = _get_xpaths()
-    xpath = xpaths.get('receive_date', '')
-    if xpath:
-        elements = page.xpath(xpath)
-        if elements:
-            val = (elements[0].text_content() or '').strip()
-            # Remove trailing timestamp (e.g., " 12:34:56")
-            if len(val) > 9 and val[-9] == ' ' and ':' in val[-8:]:
-                val = val[:-9]
-            return val
+    base_xpath = xpaths.get('receive_date', '')
+    if not base_xpath:
+        return ""
+    
+    # If running title exists, receive date shifts from tr[8] to tr[9]
+    xpath = base_xpath.replace('/tr[8]/', '/tr[9]/') if _has_running_title_row(page) else base_xpath
+    
+    elements = page.xpath(xpath)
+    if elements:
+        val = (elements[0].text_content() or '').strip()
+        # Remove trailing timestamp (e.g., " 12:34:56")
+        if len(val) > 9 and val[-9] == ' ' and ':' in val[-8:]:
+            val = val[:-9]
+        return val
     return ""
 
 def _extract_acceptance_date(page) -> str:
-    """Extract acceptance date."""
+    """Extract acceptance date (adjusts for optional running title row)."""
     xpaths = _get_xpaths()
-    xpath = xpaths.get('acceptance_date', '')
-    if xpath:
-        elements = page.xpath(xpath)
-        if elements:
-            return (elements[0].text_content() or '').strip()
+    base_xpath = xpaths.get('acceptance_date', '')
+    if not base_xpath:
+        return ""
+    
+    # If running title exists, acceptance date shifts from tr[10] to tr[11]
+    xpath = base_xpath.replace('/tr[10]/', '/tr[11]/') if _has_running_title_row(page) else base_xpath
+    
+    elements = page.xpath(xpath)
+    if elements:
+        return (elements[0].text_content() or '').strip()
     return ""
 
 def _extract_authors_emails_and_affiliations(page):
