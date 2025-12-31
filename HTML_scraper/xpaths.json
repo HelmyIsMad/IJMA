@@ -1,0 +1,10 @@
+{
+    "code": "/html/div/div[4]/div[1]/div[1]/div/div/div[2]/div[2]/div/div[1]/div/table/tbody/tr[1]/td[2]/span",
+    "title": "/html/div/div[4]/div[1]/div[1]/div/div/div[2]/div[2]/div/div[1]/div/table/tbody/tr[2]/td[2]",
+    "research_type": "/html/div/div[4]/div[1]/div[1]/div/div/div[2]/div[2]/div/div[1]/div/table/tbody/tr[4]/td[2]",
+    "receive_date": "/html/div/div[4]/div[1]/div[1]/div/div/div[2]/div[2]/div/div[1]/div/table/tbody/tr[8]/td[2]",
+    "acceptance_date": "/html/div/div[4]/div[1]/div[1]/div/div/div[2]/div[2]/div/div[1]/div/table/tbody/tr[10]/td[2]",
+    "authors": "/html/div/div[4]/div[1]/div[1]/div/div/div[2]/div[2]/div/div[2]/div/div/div/div/table/tbody/tr/td[2]",
+    "emails": "/html/div/div[4]/div[1]/div[1]/div/div/div[2]/div[2]/div/div[2]/div/div/div/div/table/tbody/tr/td[3]",
+    "affiliations": "/html/div/div[4]/div[1]/div[1]/div/div/div[2]/div[2]/div/div[2]/div/div/div/div/table/tbody/tr/td[8]"
+}
