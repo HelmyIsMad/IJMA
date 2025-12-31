@@ -14,6 +14,21 @@ import re
 from .style_handler import apply_hardcoded_style
 
 
+def _remove_empty_lines(text: str) -> str:
+    """Remove empty lines from text while preserving lines with content.
+    
+    Args:
+        text: The text to process
+        
+    Returns:
+        Text with empty lines removed
+    """
+    lines = text.split('\n')
+    # Keep only non-empty lines (lines that have content after stripping)
+    non_empty_lines = [line for line in lines if line.strip()]
+    return '\n'.join(non_empty_lines)
+
+
 def _normalize_symbol_spacing_preserve_newlines(text: str) -> str:
     """Normalize spacing around '=' and '±' without destroying newlines."""
     # Apply per-line so we don't collapse \n into spaces.
@@ -118,6 +133,8 @@ def _parse_html_table_to_grid(rows) -> tuple:
             
             # Get cell attributes
             cell_text = cell.get_text(separator='\n')
+            # Remove empty lines from cell text
+            cell_text = _remove_empty_lines(cell_text)
             rowspan = int(cell.get('rowspan', 1))
             colspan = int(cell.get('colspan', 1))
             
@@ -381,6 +398,8 @@ def _fill_and_style_table(word_table, table_data: list, merged_cells: set) -> No
                 from .text_formatter import apply_percentage_formatting
                 cell_text = apply_percentage_formatting(cell_text)
                 cell_text = _normalize_symbol_spacing_preserve_newlines(cell_text)
+                # Remove any empty lines that might have been created
+                cell_text = _remove_empty_lines(cell_text)
                 cell.text = cell_text
                 
                 # Style the cell
