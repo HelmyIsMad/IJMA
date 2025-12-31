@@ -37,11 +37,11 @@ def _extract_title(page) -> str:
     return ""
 
 def _has_running_title_row(page) -> bool:
-    """Check if the page has an optional 'running title' row at tr[4]."""
-    # Check if row 4 contains "running title" text (case insensitive)
-    row4_elements = page.xpath('//table[1]//tr[4]/td[2]')
-    if row4_elements:
-        text = (row4_elements[0].text_content() or '').strip().lower()
+    """Check if the page has an optional 'running title' row at tr[5]."""
+    # Check if row 5 contains "running title" text (case insensitive)
+    row5_elements = page.xpath('//table[1]//tr[5]/td[1]')
+    if row5_elements:
+        text = (row5_elements[0].text_content() or '').strip().lower()
         return 'running' in text and 'title' in text
     return False
 
