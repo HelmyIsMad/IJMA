@@ -33,6 +33,28 @@ def normalize_symbol_spacing(text: str) -> str:
     return text.strip()
 
 
+def ensure_bracket_spacing(text: str) -> str:
+    """
+    Ensure each '[' has a space before it and each ']' has a space after it.
+    
+    Args:
+        text: The text to normalize
+        
+    Returns:
+        Text with proper spacing around brackets
+    """
+    # Add space before '[' if not at start and not already preceded by whitespace
+    text = re.sub(r'(\S)\[', r'\1 [', text)
+    
+    # Add space after ']' if not at end and not already followed by whitespace
+    text = re.sub(r'\](\S)', r'] \1', text)
+    
+    # Clean up any double spaces that might have been created
+    text = re.sub(r'\s+', ' ', text)
+    
+    return text.strip()
+
+
 def apply_text_formatting_rules(paragraph: Paragraph) -> None:
     """
     Apply special formatting rules to paragraph text.
@@ -51,6 +73,7 @@ def process_formatted_text(paragraph: Paragraph, text: str) -> None:
     - Replace round brackets with square brackets
     - Convert integer percentages to float format (10% -> 10.0%)
     - Normalize spacing around = and ± symbols
+    - Ensure space before '[' and space after ']'
     - Apply superscript formatting to bracketed numbers
     - Apply italic formatting to "et al"
     
@@ -66,6 +89,9 @@ def process_formatted_text(paragraph: Paragraph, text: str) -> None:
     
     # Normalize spacing around = and ± symbols
     text = normalize_symbol_spacing(text)
+    
+    # Ensure space before '[' and space after ']'
+    text = ensure_bracket_spacing(text)
     
     # Split text into segments for different formatting
     segments = []

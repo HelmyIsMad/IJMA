@@ -14,18 +14,6 @@ import re
 from .style_handler import apply_hardcoded_style
 
 
-def _cleanup_newlines(text: str) -> str:
-    """Remove ALL newline characters from table cells.
-
-    Replaces newlines with spaces to ensure no line breaks inside cells.
-    """
-    # Replace all newline variations with space
-    text = text.replace('\r\n', ' ').replace('\n', ' ').replace('\r', ' ')
-    # Collapse multiple spaces into one
-    text = re.sub(r'\s+', ' ', text)
-    return text.strip()
-
-
 def _normalize_symbol_spacing_preserve_newlines(text: str) -> str:
     """Normalize spacing around '=' and '±' without destroying newlines."""
     # Apply per-line so we don't collapse \n into spaces.
@@ -44,7 +32,7 @@ def _normalize_symbol_spacing_preserve_newlines(text: str) -> str:
         line = re.sub(r'[ \t]+', ' ', line)
         normalized_lines.append(line.strip())
 
-    return _cleanup_newlines('\n'.join(normalized_lines))
+    return '\n'.join(normalized_lines)
 
 
 def process_table_content(paragraph: Paragraph, html_content: str, doc: Optional[Document] = None, 
@@ -129,7 +117,7 @@ def _parse_html_table_to_grid(rows) -> tuple:
                 break
             
             # Get cell attributes
-            cell_text = _cleanup_newlines(cell.get_text(separator='\n'))
+            cell_text = cell.get_text(separator='\n')
             rowspan = int(cell.get('rowspan', 1))
             colspan = int(cell.get('colspan', 1))
             
@@ -393,7 +381,6 @@ def _fill_and_style_table(word_table, table_data: list, merged_cells: set) -> No
                 from .text_formatter import apply_percentage_formatting
                 cell_text = apply_percentage_formatting(cell_text)
                 cell_text = _normalize_symbol_spacing_preserve_newlines(cell_text)
-                cell_text = _cleanup_newlines(cell_text)
                 cell.text = cell_text
                 
                 # Style the cell
