@@ -23,9 +23,11 @@ def process_authors_and_affiliations(authors: List[str], affiliations: List[str]
     Rules:
     - If there is only **one unique affiliation**, do **not** number affiliations.
     - Put asterisk/affiliation numbers **after** the author name (not before).
+    - Sort authors by affiliation number (keeping first author with * at the start).
       Examples:
         - Single affiliation: "Alice*; Bob;"
-        - Multiple affiliations: "Alice*1; Bob2;"
+        - Multiple affiliations: "Alice*1; Bob2;" (sorted by affiliation)
+        - Input order: *1, 2, 2, 3, 1, 2 → Output: *1, 1, 2, 2, 2, 3
 
     Returns:
         (formatted_authors, formatted_affiliations)
@@ -54,7 +56,7 @@ def process_authors_and_affiliations(authors: List[str], affiliations: List[str]
     new_authors: List[str] = []
     new_affiliation: List[str] = []
 
-    # Unique affiliations preserving order
+    # Unique affiliations preserving order of first appearance
     unique_affiliations: List[str] = []
     for aff in affiliations:
         if aff and aff not in unique_affiliations:
@@ -62,33 +64,56 @@ def process_authors_and_affiliations(authors: List[str], affiliations: List[str]
 
     single_unique_affiliation = len(unique_affiliations) <= 1
 
-    # Map affiliation -> number (only used when multiple unique affiliations exist)
+    # Map affiliation -> number (based on order of first appearance)
     affiliation_map: Dict[str, int] = {}
     next_num = 1
+    
+    for aff in affiliations:
+        aff = (aff or '').strip()
+        if aff and aff not in affiliation_map:
+            affiliation_map[aff] = next_num
+            new_affiliation.append(str(next_num))
+            new_affiliation.append(aff)
+            next_num += 1
 
+    # Create list of (author, affiliation, affiliation_number, is_first_author)
+    author_data = []
     for i, (author, aff) in enumerate(zip(authors, affiliations)):
         author = (author or '').strip()
         aff = (aff or '').strip()
+        
+        if single_unique_affiliation:
+            aff_number = 0  # Not used for sorting when single affiliation
+            is_first = i == 0
+        else:
+            aff_number = affiliation_map.get(aff, 0)
+            is_first = i == 0
+        
+        author_data.append((author, aff, aff_number, is_first))
 
+    # Sort authors: first author stays first, then sort by affiliation number
+    if not single_unique_affiliation:
+        first_author = author_data[0] if author_data else None
+        other_authors = author_data[1:] if len(author_data) > 1 else []
+        
+        # Sort other authors by affiliation number
+        other_authors_sorted = sorted(other_authors, key=lambda x: x[2])
+        
+        # Reconstruct the list with first author at the start
+        if first_author:
+            author_data = [first_author] + other_authors_sorted
+
+    # Build the formatted author list
+    for i, (author, aff, aff_number, is_first) in enumerate(author_data):
         suffix = ''
 
         if single_unique_affiliation:
             # No numbering in affiliation list, only first author gets '*'
-            if i == 0:
+            if is_first:
                 suffix = '*'
         else:
-            # Assign or reuse number for the affiliation
-            if aff in affiliation_map:
-                aff_number = affiliation_map[aff]
-            else:
-                aff_number = next_num
-                affiliation_map[aff] = next_num
-                new_affiliation.append(str(next_num))
-                new_affiliation.append(aff)
-                next_num += 1
-
             # First author: * + number, others: number
-            suffix = f"*{aff_number}" if i == 0 else str(aff_number)
+            suffix = f"*{aff_number}" if is_first else str(aff_number)
 
         # Author name first, then suffix (if any), then semicolon
         new_authors.append(author)
