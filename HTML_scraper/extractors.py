@@ -39,7 +39,7 @@ def _extract_title(page) -> str:
 def _has_running_title_row(page) -> bool:
     """Check if the page has an optional 'running title' row at tr[4]."""
     # Check if row 4 contains "running title" text (case insensitive)
-    row4_elements = page.xpath('//table[1]//tr[4]/td[1]')
+    row4_elements = page.xpath('//table[1]//tr[4]/td[2]')
     if row4_elements:
         text = (row4_elements[0].text_content() or '').strip().lower()
         return 'running' in text and 'title' in text
@@ -52,8 +52,8 @@ def _extract_research_type(page) -> str:
     if not base_xpath:
         return ""
     
-    # If running title exists, research type shifts from tr[4] to tr[5]
-    xpath = base_xpath.replace('/tr[4]/', '/tr[5]/') if _has_running_title_row(page) else base_xpath
+    # If running title exists at tr[5], research type shifts from tr[4] to tr[6]
+    xpath = base_xpath.replace('/tr[4]/', '/tr[6]/') if _has_running_title_row(page) else base_xpath
     
     elements = page.xpath(xpath)
     if elements:
