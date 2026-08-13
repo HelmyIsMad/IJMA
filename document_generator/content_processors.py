@@ -6,15 +6,7 @@ from typing import List, Dict, Optional
 from .formatters import format_title
 
 # Import affiliation normalizer
-try:
-    import sys
-    import os
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-    from affiliation_processor.affiliation_fixer import normalize_affiliation
-except ImportError:
-    # Fallback if affiliation_fixer not available
-    def normalize_affiliation(raw: str) -> str:
-        return raw.strip() + "."
+from affiliation_processor.affiliation_fixer import normalize_affiliation
 
 
 def process_authors_and_affiliations(authors: List[str], affiliations: List[str]) -> tuple:

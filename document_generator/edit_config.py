@@ -63,7 +63,8 @@ def fill_values(
     
     # Fill header and metadata
     VALUES["{{research_title}}"][0] = formatted_title
-    VALUES["{{header_name}}"][0] = authors_short[0] + ", "
+    VALUES["{{header_name}}"][0] = (authors_short[0] + ", ") if authors_short else ""
+    VALUES["{{header_name}}"][1] = "et al." if len(authors_short) > 1 else ""
     VALUES["{{research_type}}"][0] = format_research_type(research_type)
     VALUES["{{date_received}}"][0] = format_date(receive_date)
     VALUES["{{date_accepted}}"][0] = format_date(accept_date)

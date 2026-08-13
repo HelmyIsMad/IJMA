@@ -2,6 +2,7 @@
 Text formatting utilities for processing user inputs.
 Handles title case, date formatting, and text transformations.
 """
+from datetime import datetime
 from typing import List
 
 
@@ -44,15 +45,28 @@ def format_title(title: str) -> str:
 def format_date(date: str) -> str:
     """
     Format a date string.
-    
+
+    Reorders DD-MM-YYYY to the YYYY-MM-DD style used in the template header.
+    Already-ISO dates and non-numeric dates (e.g., "15 January 2024") are left
+    unchanged.
+
     Args:
         date: The date string to format
-        
+
     Returns:
         Formatted date string
     """
     date = date.strip()
-    date = '-'.join(date.split('-')[::-1])
+    parts = date.split('-')
+    # Only reorder when the input is day-month-year (three numeric parts).
+    if len(parts) == 3 and all(p.isdigit() for p in parts):
+        day, month, year = parts
+        # Day-first (DD-MM-YYYY) -> YYYY-MM-DD
+        if len(year) == 4:
+            return f"{year}-{month}-{day}"
+        # Year-first (YYYY-MM-DD) -> leave as-is
+        if len(day) == 4:
+            return date
     return date
 
 
@@ -142,8 +156,11 @@ def format_citation(title: str, authors_short: List[str]) -> List[str]:
     for author in authors_short:
         citation += author + ", "
     
-    citation = citation[:-2] + ". " + title + ". "
-    citation += "IJMA 2025; XX-XX [Article in Press]."
+    if authors_short:
+        citation = citation[:-2] + ". "
+    citation += title + ". "
+    year = datetime.now().year
+    citation += f"IJMA {year}; XX-XX [Article in Press]."
     
     return ["Citation: ", citation]
 

@@ -8,42 +8,14 @@ from docx.text.paragraph import Paragraph
 from docx.oxml import OxmlElement
 from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-import re
 from .config import VALUES
 from .style_handler import apply_hardcoded_style
-from .text_formatter import process_formatted_text
+from .text_formatter import process_formatted_text, apply_percentage_formatting, normalize_symbol_spacing
 from .table_processor import process_table_content
 from .figure_processor import process_image_content
 
 def int_percent_to_float_percent(s):
-    return re.sub(
-        r'(?<!\.)\d+(?=%)',
-        lambda m: f"{m.group(0)}.0",
-        s
-    )
-
-def normalize_symbol_spacing(text: str) -> str:
-    """
-    Ensure "=" and "±" have exactly one space before and after them.
-    
-    Args:
-        text: The text to normalize
-        
-    Returns:
-        Text with normalized spacing around = and ± symbols
-    """
-    # Remove all spaces around = and ±
-    text = re.sub(r'\s*=\s*', '=', text)
-    text = re.sub(r'\s*±\s*', '±', text)
-    
-    # Add exactly one space before and after
-    text = re.sub(r'=', ' = ', text)
-    text = re.sub(r'±', ' ± ', text)
-    
-    # Clean up any double spaces that might have been created
-    text = re.sub(r'\s+', ' ', text)
-    
-    return text.strip()
+    return apply_percentage_formatting(s)
 
 def insert_values(paragraph: Paragraph, variable: str, doc: Optional[Document] = None) -> None:
     """

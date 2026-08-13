@@ -13,29 +13,40 @@ This repo contains:
 - One-click document generation
 - Native **Save As** dialog
 - Automatically opens the saved `.docx`
+- Optional: paste IJMA submission HTML to auto-fill title, dates, authors, and affiliations
 
 ## Quick start
 
 ### 1) Install dependencies
 
 ```bash
-pip install pywebview python-docx
+pip install -r requirements.txt
 ```
 
 ### 2) Run the desktop app
 
 ```bash
-python desktop_app.py
+python main.py
 ```
 
 Fill the form and click **Generate Document**.
+
+### Command-line generation (optional)
+
+Generate a document without the GUI:
+
+```bash
+python -m document_generator --title "My paper" --authors "Author One" "Author Two" --output out.docx
+```
+
+Run `python -m document_generator --help` for all options.
 
 ## How it works (high level)
 
 ### Desktop layer (no API)
 
 - **UI:** `desktop_ui/index.html`
-- **Launcher:** `desktop_app.py`
+- **Launcher:** `main.py`
 
 The UI builds a JSON payload and calls:
 
@@ -63,6 +74,11 @@ Internally it:
 4. Handles special content:
    - tables: `document_generator/table_processor.py`
    - figures/images: `document_generator/figure_processor.py`
+
+### Modules
+
+- `html_scraper/` — parses pasted IJMA submission HTML (XPath) to auto-fill the form
+- `affiliation_processor/` — rule-based affiliation normalization
 
 ## Template placeholders
 
